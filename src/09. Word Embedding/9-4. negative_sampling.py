@@ -42,11 +42,13 @@ tokenized_doc = news_df["clean_doc"].apply(lambda x: x.split())  # 토큰화
 # 불용어를 제거합니다.
 tokenized_doc = tokenized_doc.apply(lambda x: [item for item in x if item not in stop_words])
 
-tokenized_doc = tokenized_doc.to_list()
+tokenized_doc = tokenized_doc.to_numpy()
+ic(tokenized_doc.shape)
 
 # 단어가 1개 이하인 경우 중심 단어, 주변 단어가 존재하지 않으므로 불가.
 drop_train = [index for index, sentence in enumerate(tokenized_doc) if len(sentence) <= 1]
-ic(drop_train)
+drop_train = np.array(drop_train)
+ic(drop_train.shape)
 
 tokenized_doc = np.delete(tokenized_doc, drop_train, axis=0)
 ic(len(tokenized_doc))
