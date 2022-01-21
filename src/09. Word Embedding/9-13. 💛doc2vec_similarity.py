@@ -11,14 +11,23 @@ from gensim.models.doc2vec import TaggedDocument
 
 from tqdm import tqdm
 
-df = pd.read_csv("/content/dart.csv", sep=",")
-
+df = pd.read_csv("../data/dart.csv", sep=",")
 df = df.dropna()
-df
+print(df)
 
 # Doc2Vec
+# import MeCab
+# from konlpy.tag import Mecab
 
-mecab = Mecab()
+# m = MeCab.Tagger()
+# out = m.parse("미캅이 잘 설치되었는지 확인중입니다.")
+# print(out)
+
+# mecab = Mecab()C:\ProgramData\mecab-ko-msvc-x64\mecab-ko-dic
+# mecab = Mecab(dicpath="C:/mecab/mecab-ko-dic")
+# print(mecab.pos("아버지가방에들어가신다"))
+
+mecab = Mecab(dicpath="C:/mecab/mecab-ko-dic")
 
 tagged_corpus_list = []
 
@@ -56,17 +65,29 @@ model.save("../data/dart.doc2vec")
 
 
 # dart.doc2vec 파일 다운로드
-# !wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1HyGiCxE748kt3dAhHTHxHHHMjj0VcpMY' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1HyGiCxE748kt3dAhHTHxHHHMjj0VcpMY" -O dart.doc2vec && rm -rf /tmp/cookies.txt
+# !wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet
+# --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate
+# 'https://docs.google.com/uc?export=download&id=1HyGiCxE748kt3dAhHTHxHHHMjj0VcpMY' -O- | sed -rn
+# 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1HyGiCxE748kt3dAhHTHxHHHMjj0VcpMY" -O dart.doc2vec && rm -rf /tmp/cookies.txt
 # dart.doc2vec.trainables.syn1neg.npy 파일 다운로드
-# !wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1XTgLCu0BmLPpaU960po3YWZsGYMNH7r3' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1XTgLCu0BmLPpaU960po3YWZsGYMNH7r3" -O dart.doc2vec.trainables.syn1neg.npy && rm -rf /tmp/cookies.txt
+# !wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet
+# --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate
+# 'https://docs.google.com/uc?export=download&id=1XTgLCu0BmLPpaU960po3YWZsGYMNH7r3' -O- | sed -rn
+# 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1XTgLCu0BmLPpaU960po3YWZsGYMNH7r3" -O dart.doc2vec.trainables.syn1neg.npy
+# && rm -rf /tmp/cookies.txt
 # dart.doc2vec.wv.vectors.npy 파일 다운로드
-# !wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1tZOkSypiT0djwAZOInFnnQrJO9rGOdv2' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1XTgLCu0BmLPpaU960po3YWZsGYMNH7r3" -O dart.doc2vec.wv.vectors.npy && rm -rf /tmp/cookies.txt
+# !wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet
+# --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate
+# 'https://docs.google.com/uc?export=download&id=1tZOkSypiT0djwAZOInFnnQrJO9rGOdv2' -O- | sed -rn
+# 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1XTgLCu0BmLPpaU960po3YWZsGYMNH7r3" -O dart.doc2vec.wv.vectors.npy
+# && rm -rf /tmp/cookies.txt
 
 # Commented out IPython magic to ensure Python compatibility.
 # %ls
 
 # 모델을 로드합니다.
-model = doc2vec.Doc2Vec.load("dart.doc2vec")
+model = doc2vec.Doc2Vec.load("../data/dart.doc2vec")
+model.dv.norms = None
 
 similar_doc = model.docvecs.most_similar("동화약품")
 print(similar_doc)
