@@ -12,6 +12,8 @@ import tensorflow as tf
 # pip install customized_konlpy
 
 from ckonlpy.tag import Twitter
+from konlpy.tag import Okt
+
 
 twitter = Twitter()
 twitter.morphs("은경이는 사무실로 갔습니다.")
@@ -309,7 +311,7 @@ history = model.fit(
 )
 
 # save model
-model.save("model.h5")
+model.save("../data/21_model.h5")
 
 # plot accuracy and loss plot
 plt.subplot(211)

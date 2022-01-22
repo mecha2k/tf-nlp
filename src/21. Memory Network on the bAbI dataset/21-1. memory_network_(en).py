@@ -264,7 +264,7 @@ history = model.fit(
 )
 
 # save model
-model.save("model.h5")
+model.save("21_model.h5")
 
 print("\n 테스트 정확도: %.4f" % (model.evaluate([Xstest, Xqtest], Ytest)[1]))
 
