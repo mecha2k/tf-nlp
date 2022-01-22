@@ -8,7 +8,6 @@ from nltk.stem import LancasterStemmer
 nltk.download("wordnet")
 nltk.download("punkt")
 
-
 lemmatizer = WordNetLemmatizer()
 
 words = [

@@ -10,6 +10,8 @@ from nltk.tokenize import TreebankWordTokenizer
 
 from konlpy.tag import Okt
 from konlpy.tag import Kkma
+
+# KSS(Korean Sentence Splitter)
 import kss
 
 from tensorflow.keras.preprocessing.text import text_to_word_sequence
