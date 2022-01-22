@@ -2,7 +2,7 @@ import numpy as np
 import urllib.request
 from tensorflow.keras.utils import to_categorical
 
-urllib.request.urlretrieve("http://www.gutenberg.org/files/11/11-0.txt", filename="11-0.txt")
+# urllib.request.urlretrieve("http://www.gutenberg.org/files/11/11-0.txt", filename="11-0.txt")
 f = open("11-0.txt", "rb")
 sentences = []
 for sentence in f:  # 데이터를 한 줄씩 읽는다.

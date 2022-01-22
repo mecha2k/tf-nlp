@@ -59,7 +59,7 @@ tokenizer.fit_on_texts(tokenized_doc)
 word2idx = tokenizer.word_index
 idx2word = {value: key for key, value in word2idx.items()}
 encoded = tokenizer.texts_to_sequences(tokenized_doc)
-ic(encoded[:5])
+print(encoded[:5])
 
 vocab_size = len(word2idx) + 1
 ic("단어 집합의 크기 :", vocab_size)
