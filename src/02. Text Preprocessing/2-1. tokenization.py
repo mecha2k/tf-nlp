@@ -17,8 +17,8 @@ import kss
 from tensorflow.keras.preprocessing.text import text_to_word_sequence
 from multiprocessing import freeze_support
 
-nltk.download("punkt")
-nltk.download("averaged_perceptron_tagger")
+nltk.download("punkt", quiet=True)
+nltk.download("averaged_perceptron_tagger", quiet=True)
 
 
 if __name__ == "__main__":

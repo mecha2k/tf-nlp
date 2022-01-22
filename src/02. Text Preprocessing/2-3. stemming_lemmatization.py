@@ -5,8 +5,8 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 from nltk.stem import LancasterStemmer
 
-nltk.download("wordnet")
-nltk.download("punkt")
+nltk.download("wordnet", quiet=True)
+nltk.download("punkt", quiet=True)
 
 lemmatizer = WordNetLemmatizer()
 
