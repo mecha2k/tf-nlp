@@ -1,16 +1,13 @@
 import nltk
-
-nltk.download("punkt")
-nltk.download("stopwords")
-
-# 1. 정수 인코딩(Integer Encoding)
-## 1) dictionary 사용하기
-
-
 from nltk.tokenize import sent_tokenize
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
+nltk.download("punkt", quiet=True)
+nltk.download("stopwords", quiet=True)
+
+# 1. 정수 인코딩(Integer Encoding)
+## 1) dictionary 사용하기
 raw_text = (
     "A barber is a person. a barber is good person. a barber is huge person. he Knew A Secret! The Secret "
     "He Kept is huge secret. Huge secret. His barber kept his word. a barber kept his word. His barber kept "
@@ -152,9 +149,7 @@ tokenizer = Tokenizer()
 tokenizer.fit_on_texts(preprocessed_sentences)
 
 print(tokenizer.word_index)
-
 print(tokenizer.word_counts)
-
 print(tokenizer.texts_to_sequences(preprocessed_sentences))
 
 vocab_size = 5
@@ -162,9 +157,7 @@ tokenizer = Tokenizer(num_words=vocab_size + 1)  # 상위 5개 단어만 사용
 tokenizer.fit_on_texts(preprocessed_sentences)
 
 print(tokenizer.word_index)
-
 print(tokenizer.word_counts)
-
 print(tokenizer.texts_to_sequences(preprocessed_sentences))
 
 tokenizer = Tokenizer()
@@ -187,5 +180,4 @@ tokenizer = Tokenizer(num_words=vocab_size + 2, oov_token="OOV")
 tokenizer.fit_on_texts(preprocessed_sentences)
 
 print("단어 OOV의 인덱스 : {}".format(tokenizer.word_index["OOV"]))
-
 print(tokenizer.texts_to_sequences(preprocessed_sentences))
