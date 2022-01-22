@@ -1,7 +1,8 @@
 import urllib.request
 
 # urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/ukairia777/tensorflow-nlp-tutorial/main/12.%20Sequence%20Labeling/dataset/train.txt",
+#     "https://raw.githubusercontent.com/ukairia777/tensorflow-nlp-tutorial/main/12.%20Sequence%20"
+#     "Labeling/dataset/train.txt",
 #     filename="train.txt",
 # )
 

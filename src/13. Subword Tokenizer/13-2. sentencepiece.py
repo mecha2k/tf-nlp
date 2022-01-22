@@ -100,13 +100,9 @@ for line in lines:
     print()
 
 sp.GetPieceSize()
-
 sp.IdToPiece(4)
-
 sp.PieceToId("영화")
-
 sp.DecodeIds([54, 200, 821, 85])
-
 sp.DecodePieces(["▁진짜", "▁최고의", "▁영화입니다", "▁ᄏᄏ"])
 
 print(sp.encode("진짜 최고의 영화입니다 ㅋㅋ", out_type=str))

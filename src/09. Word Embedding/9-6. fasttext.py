@@ -33,14 +33,12 @@ from gensim.models import Word2Vec, FastText
 # # 각 문장에 대해서 NLTK를 이용하여 단어 토큰화를 수행.
 # result = [word_tokenize(sentence) for sentence in normalized_text]
 
-result = np.load("../data/ted_en_token.npy")
+result = np.load("../data/ted_en_token.npy", allow_pickle=True)
 print("총 샘플의 개수 : {}".format(len(result)))
 
 
-model = Word2Vec(sentences=result, size=100, window=5, min_count=5, workers=4, sg=0)
+# model = Word2Vec(sentences=result, vector_size=100, window=5, min_count=5, workers=4, sg=0)
+# model.wv.most_similar("electrofishing")
 
-model.wv.most_similar("electrofishing")
-
-model = FastText(result, size=100, window=5, min_count=5, workers=4, sg=1)
-
+model = FastText(result, vector_size=100, window=5, min_count=5, workers=4, sg=1)
 model.wv.most_similar("electrofishing")

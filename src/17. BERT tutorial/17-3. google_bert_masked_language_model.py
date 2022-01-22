@@ -1,11 +1,7 @@
-# !pip install transformers
-
 from transformers import TFBertForMaskedLM
-
-model = TFBertForMaskedLM.from_pretrained("bert-large-uncased")
-
 from transformers import AutoTokenizer
 
+model = TFBertForMaskedLM.from_pretrained("bert-large-uncased")
 tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
 
 inputs = tokenizer("Soccer is a really fun [MASK].", return_tensors="tf")

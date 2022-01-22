@@ -27,7 +27,7 @@ test_data_sentence = [sent.split() for sent in test_ner_df["Sentence"].values]
 train_data_label = [tag.split() for tag in train_ner_df["Tag"].values]
 test_data_label = [tag.split() for tag in test_ner_df["Tag"].values]
 
-labels = [label.strip() for label in open("ner_label.txt", "r", encoding="utf-8")]
+labels = [label.strip() for label in open("../data/ner_label.txt", "r", encoding="utf-8")]
 print("개체명 태깅 정보 :", labels)
 
 tag_to_index = {tag: index for index, tag in enumerate(labels)}

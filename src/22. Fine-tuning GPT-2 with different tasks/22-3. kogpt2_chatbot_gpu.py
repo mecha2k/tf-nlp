@@ -52,7 +52,8 @@ for batch in dataset:
 
 print(
     tokenizer.encode(
-        "</s><usr> 12시 땡!<sys> 하루가 또 가네요.</s><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad>"
+        "</s><usr> 12시 땡!<sys> 하루가 또 가네요.</s><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad><pad>"
+        "<pad><pad><pad>"
     )
 )
 

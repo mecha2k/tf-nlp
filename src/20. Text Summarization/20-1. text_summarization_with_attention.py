@@ -202,7 +202,10 @@ def preprocess_sentence(sentence, remove_stopwords=True):
     return tokens
 
 
-temp_text = "Everything I bought was great, infact I ordered twice and the third ordered was<br />for my mother and father."
+temp_text = (
+    "Everything I bought was great, infact I ordered twice and the third ordered was<br />for my mother "
+    "and father."
+)
 temp_summary = "Great way to start (or finish) the day!!!"
 print(preprocess_sentence(temp_text))
 print(preprocess_sentence(temp_summary, 0))
@@ -275,7 +278,6 @@ def below_threshold_len(max_len, nested_list):
 
 
 below_threshold_len(text_max_len, data["Text"])
-
 below_threshold_len(summary_max_len, data["Summary"])
 
 data = data[data["Text"].apply(lambda x: len(x.split()) <= text_max_len)]

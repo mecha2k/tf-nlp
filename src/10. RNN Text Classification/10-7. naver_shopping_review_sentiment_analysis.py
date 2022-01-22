@@ -71,7 +71,14 @@ test_data["reviews"].replace("", np.nan, inplace=True)  # 공백은 Null 값으�
 test_data = test_data.dropna(how="any")  # Null 값 제거
 print("전처리 후 테스트용 샘플의 개수 :", len(test_data))
 
-mecab = Mecab(dicpath="C:/mecab/mecab-ko-dic")
+import platform
+
+osname = platform.system()
+if osname == "Windows":
+    mecab = Mecab(dicpath="C:/mecab/mecab-ko-dic")
+else:
+    mecab = Mecab()
+
 print(mecab.morphs("와 이런 것도 상품이라고 차라리 내가 만드는 게 나을 뻔"))
 
 stopwords = [

@@ -68,7 +68,6 @@ for line in f:
 f.close()
 
 print("%s개의 Embedding vector가 있습니다." % len(embedding_dict))
-
 print(embedding_dict["respectable"])
 print(len(embedding_dict["respectable"]))
 
@@ -77,9 +76,7 @@ embedding_matrix = np.zeros((vocab_size, 100))
 np.shape(embedding_matrix)
 
 print(tokenizer.word_index.items())
-
 print(tokenizer.word_index["great"])
-
 print(embedding_dict["great"])
 
 for word, index in tokenizer.word_index.items():
@@ -135,9 +132,7 @@ for word, index in tokenizer.word_index.items():
         embedding_matrix[index] = vector_value
 
 print(word2vec_model["nice"])
-
 print(word2vec_model["great"])
-
 print(embedding_matrix[2])
 
 from tensorflow.keras.models import Sequential

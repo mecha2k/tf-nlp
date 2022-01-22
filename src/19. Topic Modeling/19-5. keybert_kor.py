@@ -105,12 +105,9 @@ def max_sum_sim(doc_embedding, candidate_embeddings, words, top_n, nr_candidates
 
 # 이를 위해 상위 10개의 키워드를 선택하고 이 10개 중에서 서로 가장 유사성이 낮은 5개를 선택합니다.
 # 낮은 nr_candidates를 설정하면 결과는 출력된 키워드 5개는 기존의 코사인 유사도만 사용한 것과 매우 유사한 것으로 보입니다.
-
-
 max_sum_sim(doc_embedding, candidate_embeddings, candidates, top_n=5, nr_candidates=10)
 
 # 그러나 상대적으로 높은 nr_candidates는 더 다양한 키워드 5개를 만듭니다.
-
 max_sum_sim(doc_embedding, candidate_embeddings, candidates, top_n=5, nr_candidates=30)
 
 # 3. Maximal Marginal Relevance
@@ -158,9 +155,7 @@ def mmr(doc_embedding, candidate_embeddings, words, top_n, diversity):
 
 
 # 만약 우리가 상대적으로 낮은 diversity 값을 설정한다면, 결과는 기존의 코사인 유사도만 사용한 것과 매우 유사한 것으로 보입니다.
-
 mmr(doc_embedding, candidate_embeddings, candidates, top_n=5, diversity=0.2)
 
 # 그러나 상대적으로 높은 diversity값은 다양한 키워드 5개를 만들어냅니다.
-
 mmr(doc_embedding, candidate_embeddings, candidates, top_n=5, diversity=0.7)

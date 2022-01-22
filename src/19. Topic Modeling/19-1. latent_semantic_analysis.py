@@ -98,7 +98,7 @@ print(dataset.target_names)
 
 news_df = pd.DataFrame({"document": documents})
 # 특수 문자 제거
-news_df["clean_doc"] = news_df["document"].str.replace("[^a-zA-Z]", " ")
+news_df["clean_doc"] = news_df["document"].str.replace("[^a-zA-Z]", " ", regex=True)
 # 길이가 3이하인 단어는 제거 (길이가 짧은 단어 제거)
 news_df["clean_doc"] = news_df["clean_doc"].apply(
     lambda x: " ".join([w for w in x.split() if len(w) > 3])
@@ -137,7 +137,7 @@ len(svd_model.components_)
 np.shape(svd_model.components_)
 
 # 단어 집합. 1,000개의 단어가 저장됨.
-terms = vectorizer.get_feature_names()
+terms = vectorizer.get_feature_names_out()
 
 
 def get_topics(components, feature_names, n=5):

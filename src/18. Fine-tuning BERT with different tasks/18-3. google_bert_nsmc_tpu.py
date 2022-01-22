@@ -1,7 +1,4 @@
 import transformers
-
-print(transformers.__version__)
-
 import pandas as pd
 import numpy as np
 import urllib.request
@@ -11,6 +8,7 @@ import tensorflow as tf
 from transformers import BertTokenizer, TFBertModel
 from icecream import ic
 
+print(transformers.__version__)
 
 # urllib.request.urlretrieve(
 #     "https://raw.githubusercontent.com/e9t/nsmc/master/ratings_train.txt",

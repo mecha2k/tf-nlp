@@ -22,7 +22,6 @@ print(train_data.loc[train_data.document.isnull()])
 
 train_data = train_data.dropna(how="any")  # Null 값이 존재하는 행 제거
 print(train_data.isnull().values.any())  # Null 값이 존재하는지 확인
-
 print(len(train_data))
 
 # 토크나이저를 이용한 정수 인코딩
