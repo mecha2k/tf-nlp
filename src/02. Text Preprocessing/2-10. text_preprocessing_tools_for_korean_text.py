@@ -31,6 +31,12 @@ hanspell_sent = spelled_sent.checked
 print(hanspell_sent)
 # print(kospacing_sent)  # 앞서 사용한 kospacing 패키지에서 얻은 결과
 
+from konlpy.tag import Okt
+
+tokenizer = Okt()
+print(tokenizer.morphs("에이비식스 이대휘 1월 최애돌 기부 요정"))
+
+
 # pip install soynlp
 
 import urllib.request
@@ -95,7 +101,6 @@ print(repeat_normalize("와하하하하핫", num_repeats=2))
 
 
 # pip install customized_konlpy
-from konlpy.tag import Okt
 
 okt = Okt()
 print(okt.morphs("은경이는 사무실로 갔습니다."))
