@@ -2,7 +2,6 @@ from math import log
 import pandas as pd
 
 docs = ["먹고 싶은 사과", "먹고 싶은 바나나", "길고 노란 바나나 바나나", "저는 과일이 좋아요"]
-
 vocab = list(set(w for doc in docs for w in doc.split()))
 vocab.sort()
 print("단어장의 크기 :", len(vocab))
@@ -38,16 +37,14 @@ for i in range(N):
         result[-1].append(tf(t, d))
 
 tf_ = pd.DataFrame(result, columns=vocab)
-
-tf_
+print(tf_)
 
 result = []
 for j in range(len(vocab)):
     t = vocab[j]
     result.append(idf(t))
-
 idf_ = pd.DataFrame(result, index=vocab, columns=["IDF"])
-idf_
+print(idf_)
 
 result = []
 for i in range(N):
@@ -58,10 +55,9 @@ for i in range(N):
         result[-1].append(tfidf(t, d))
 
 tfidf_ = pd.DataFrame(result, columns=vocab)
-tfidf_
+print(tfidf_)
 
-"""# 3. 사이킷런을 이용한 DTM과 TF-IDF 실습"""
-
+# 3. 사이킷런을 이용한 DTM과 TF-IDF 실습
 from sklearn.feature_extraction.text import CountVectorizer
 
 corpus = [
