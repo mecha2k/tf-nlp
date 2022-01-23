@@ -1,127 +1,103 @@
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
+# pip install git+https://github.com/haven-jeon/PyKoSpacing.git
 
-# 1. 지도 학습(Supervised Learning)
-# 지도 학습의 훈련 데이터는 문제지를 연상케 합니다. 지도 학습의 훈련 데이터는 정답이 무엇인지 맞춰 하는 '문제'에 해당되는 데이터와 레이블이라고 부르는
-# '정답'이 적혀있는 데이터로 구성되어 있습니다. 쉽게 비유하면, 기계는 정답이 적혀져 있는 문제지를 문제와 정답을 함께 보면서 열심히 공부하고, 향후에
-# 정답이 없는 문제에 대해서도 정답을 잘 예측해야 합니다.
+sent = (
+    "김철수는 극중 두 인격의 사나이 이광수 역을 맡았다. 철수는 한국 유일의 태권도 전승자를 가리는 결전의 날을 앞두고 10년간 함께 훈련한 "
+    "사형인 유연재(김광수 분)를 찾으러 속세로 내려온 인물이다."
+)
 
-# 2. X와 y분리하기
-## 1) zip 함수를 이용하여 분리하기
+new_sent = sent.replace(" ", "")  # 띄어쓰기가 없는 문장 임의로 만들기
+print(new_sent)
 
-
-X, y = zip(["a", 1], ["b", 2], ["c", 3])
-print("X 데이터 :", X)
-print("y 데이터 :", y)
-
-# 리스트의 리스트 또는 행렬 또는 뒤에서 배울 개념인 2D 텐서.
-sequences = [["a", 1], ["b", 2], ["c", 3]]
-X, y = zip(*sequences)
-print("X 데이터 :", X)
-print("y 데이터 :", y)
-
-## 2) 데이터프레임을 이용하여 분리하기
-
-values = [
-    ["당신에게 드리는 마지막 혜택!", 1],
-    ["내일 뵐 수 있을지 확인 부탁드...", 0],
-    ["철수씨. 잘 지내시죠? 오랜만입...", 0],
-    ["(광고) AI로 주가를 예측할 수 있다!", 1],
-]
-
-columns = ["메일 본문", "스팸 메일 유무"]
-
-df = pd.DataFrame(values, columns=columns)
-print(df)
-
-X = df["메일 본문"]
-y = df["스팸 메일 유무"]
-
-print("X 데이터 :", X.to_list())
-print("y 데이터 :", y.to_list())
-
-## 3) Numpy를 이용하여 분리하기
-
-np_array = np.arange(0, 16).reshape((4, 4))
-print("전체 데이터 :")
-print(np_array)
-
-X = np_array[:, :3]
-y = np_array[:, 3]
-
-print("X 데이터 :")
-print(X)
-print("y 데이터 :", y)
-
-# 3. 테스트 데이터 분리하기
-
-## 1) 사이킷 런을 이용하여 분리하기
+# from pykospacing import Spacing
+#
+# spacing = Spacing()
+# kospacing_sent = spacing(new_sent)
+# print(sent)
+# print(kospacing_sent)
 
 
-"""
-예시 코드
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2, random_state=1234)
-"""
+# pip install git+https://github.com/ssut/py-hanspell.git
 
-# 임의로 X와 y 데이터를 생성
-X, y = np.arange(10).reshape((5, 2)), range(5)
+from hanspell import spell_checker
 
-print("X 전체 데이터 :")
-print(X)
-print("y 전체 데이터 :")
-print(list(y))
+sent = "맞춤법 틀리면 외 않되? 쓰고싶은대로쓰면돼지 "
+spelled_sent = spell_checker.check(sent)
 
-# 7:3의 비율로 훈련 데이터와 테스트 데이터 분리
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
+hanspell_sent = spelled_sent.checked
+print(hanspell_sent)
 
-print("X 훈련 데이터 :")
-print(X_train)
-print("X 테스트 데이터 :")
-print(X_test)
+spelled_sent = spell_checker.check(new_sent)
+hanspell_sent = spelled_sent.checked
+print(hanspell_sent)
+# print(kospacing_sent)  # 앞서 사용한 kospacing 패키지에서 얻은 결과
 
-print("y 훈련 데이터 :")
-print(y_train)
-print("y 테스트 데이터 :")
-print(y_test)
+# pip install soynlp
 
-# random_state의 값을 변경
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
+import urllib.request
+from soynlp import DoublespaceLineCorpus
+from soynlp.word import WordExtractor
 
-print("y 훈련 데이터 :")
-print(y_train)
-print("y 테스트 데이터 :")
-print(y_test)
 
-# random_state을 이전의 값이었던 1234로 변경
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1234)
+# urllib.request.urlretrieve(
+#     "https://raw.githubusercontent.com/lovit/soynlp/master/tutorials/2016-10-20.txt",
+#     filename="../data/2016-10-20.txt",
+# )
 
-print("y 훈련 데이터 :")
-print(y_train)
-print("y 테스트 데이터 :")
-print(y_test)
+# 훈련 데이터를 다수의 문서로 분리
+corpus = DoublespaceLineCorpus("../data/2016-10-20.txt")
+print(len(corpus))
 
-## 2) 수동으로 분리하기
+i = 0
+for document in corpus:
+    if len(document) > 0:
+        print(document)
+        i = i + 1
+    if i == 3:
+        break
 
-# 임의로 X와 y 데이터를 생성
-X, y = np.arange(0, 24).reshape((12, 2)), range(12)
+word_extractor = WordExtractor()
+word_extractor.train(corpus)
+word_score_table = word_extractor.extract()
 
-print("X 전체 데이터 :")
-print(X)
-print("y 전체 데이터 :")
-print(list(y))
+print(word_score_table["반포한"].cohesion_forward)
+print(word_score_table["반포한강"].cohesion_forward)
+print(word_score_table["반포한강공"].cohesion_forward)
+print(word_score_table["반포한강공원"].cohesion_forward)
+print(word_score_table["반포한강공원에"].cohesion_forward)
+print(word_score_table["디스"].right_branching_entropy)
+print(word_score_table["디스플"].right_branching_entropy)
+print(word_score_table["디스플레"].right_branching_entropy)
+print(word_score_table["디스플레이"].right_branching_entropy)
 
-num_of_train = int(len(X) * 0.8)  # 데이터의 전체 길이의 80%에 해당하는 길이값을 구한다.
-num_of_test = int(len(X) - num_of_train)  # 전체 길이에서 80%에 해당하는 길이를 뺀다.
-print("훈련 데이터의 크기 :", num_of_train)
-print("테스트 데이터의 크기 :", num_of_test)
+from soynlp.tokenizer import LTokenizer
 
-X_test = X[num_of_train:]  # 전체 데이터 중에서 20%만큼 뒤의 데이터 저장
-y_test = y[num_of_train:]  # 전체 데이터 중에서 20%만큼 뒤의 데이터 저장
-X_train = X[:num_of_train]  # 전체 데이터 중에서 80%만큼 앞의 데이터 저장
-y_train = y[:num_of_train]  # 전체 데이터 중에서 80%만큼 앞의 데이터 저장
+scores = {word: score.cohesion_forward for word, score in word_score_table.items()}
+l_tokenizer = LTokenizer(scores=scores)
+print(l_tokenizer.tokenize("국제사회와 우리의 노력들로 범죄를 척결하자", flatten=False))
 
-print("X 테스트 데이터 :")
-print(X_test)
-print("y 테스트 데이터 :")
-print(list(y_test))
+from soynlp.tokenizer import MaxScoreTokenizer
+
+maxscore_tokenizer = MaxScoreTokenizer(scores=scores)
+print(maxscore_tokenizer.tokenize("국제사회와우리의노력들로범죄를척결하자"))
+
+
+# 4. SOYNLP를 이용한 반복되는 문자 정제
+from soynlp.normalizer import *
+
+print(emoticon_normalize("앜ㅋㅋㅋㅋ이영화존잼쓰ㅠㅠㅠㅠㅠ", num_repeats=2))
+print(emoticon_normalize("앜ㅋㅋㅋㅋㅋㅋㅋㅋㅋ이영화존잼쓰ㅠㅠㅠㅠ", num_repeats=2))
+print(emoticon_normalize("앜ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ이영화존잼쓰ㅠㅠㅠㅠㅠㅠ", num_repeats=2))
+print(emoticon_normalize("앜ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ이영화존잼쓰ㅠㅠㅠㅠㅠㅠㅠㅠ", num_repeats=2))
+
+print(repeat_normalize("와하하하하하하하하하핫", num_repeats=2))
+print(repeat_normalize("와하하하하하하핫", num_repeats=2))
+print(repeat_normalize("와하하하하핫", num_repeats=2))
+
+
+# pip install customized_konlpy
+from konlpy.tag import Okt
+
+okt = Okt()
+print(okt.morphs("은경이는 사무실로 갔습니다."))
+# okt.add_dictionary("은경이", "Noun")
+# okt.morphs("은경이는 사무실로 갔습니다.")
