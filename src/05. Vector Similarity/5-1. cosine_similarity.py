@@ -36,7 +36,6 @@ cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 print("코사인 유사도 연산 결과 :", cosine_sim.shape)
 
 title_to_index = dict(zip(data["title"], data.index))
-
 idx = title_to_index["Father of the Bride Part II"]
 print(idx)
 
