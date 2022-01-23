@@ -6,13 +6,9 @@ texts = ["먹고 싶은 사과", "먹고 싶은 바나나", "길고 노란 바�
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(texts)
 print(tokenizer.word_index)
-
 print(tokenizer.texts_to_matrix(texts, mode="count"))
-
 print(tokenizer.texts_to_matrix(texts, mode="binary"))
-
 print(tokenizer.texts_to_matrix(texts, mode="tfidf").round(2))
-
 print(tokenizer.texts_to_matrix(texts, mode="freq").round(2))
 
 # 2. 20개 뉴스 그룹(Twenty Newsgroups) 데이터에 대한 이해
@@ -26,16 +22,11 @@ from tensorflow.keras.utils import to_categorical
 newsdata = fetch_20newsgroups(subset="train")
 
 print(newsdata.keys())
-
 print("훈련용 샘플의 개수 : {}".format(len(newsdata.data)))
-
 print("총 주제의 개수 : {}".format(len(newsdata.target_names)))
 print(newsdata.target_names)
-
 print("첫번째 샘플의 레이블 : {}".format(newsdata.target[0]))
-
 print("7번 레이블이 의미하는 주제 : {}".format(newsdata.target_names[7]))
-
 print(newsdata.data[0])  # 첫번째 샘플 출력
 
 data = pd.DataFrame(newsdata.data, columns=["email"])
@@ -49,7 +40,6 @@ print("중복을 제외한 샘플의 수 : {}".format(data["email"].nunique()))
 print("중복을 제외한 주제의 수 : {}".format(data["target"].nunique()))
 
 data["target"].value_counts().plot(kind="bar")
-
 print(data.groupby("target").size().reset_index(name="count"))
 
 newsdata_test = fetch_20newsgroups(subset="test", shuffle=True)

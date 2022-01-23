@@ -17,7 +17,7 @@ with tf.GradientTape() as tape:
 gradients = tape.gradient(z, [w])
 print(gradients)
 
-"""# 2. 자동 미분을 이용한 선형 회귀 구현"""
+# 2. 자동 미분을 이용한 선형 회귀 구현
 
 # 학습될 가중치 변수를 선언
 W = tf.Variable(4.0)
@@ -68,7 +68,7 @@ for i in range(301):
 x_test = [3.5, 5, 5.5, 6]
 print(hypothesis(x_test).numpy())
 
-"""# 3. 케라스로 구현하는 선형 회귀"""
+# 3. 케라스로 구현하는 선형 회귀
 
 import numpy as np
 import matplotlib.pyplot as plt

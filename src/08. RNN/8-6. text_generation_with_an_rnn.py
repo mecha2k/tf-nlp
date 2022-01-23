@@ -9,7 +9,6 @@ tokenizer = Tokenizer()
 tokenizer.fit_on_texts([text])
 vocab_size = len(tokenizer.word_index) + 1
 print("단어 집합의 크기 : %d" % vocab_size)
-
 print(tokenizer.word_index)
 
 sequences = list()
@@ -20,26 +19,21 @@ for line in text.split("\n"):  # Wn을 기준으로 문장 토큰화
         sequences.append(sequence)
 
 print("학습에 사용할 샘플의 개수: %d" % len(sequences))
-
 print(sequences)
 
 max_len = max(len(l) for l in sequences)  # 모든 샘플에서 길이가 가장 긴 샘플의 길이 출력
 print("샘플의 최대 길이 : {}".format(max_len))
 
 sequences = pad_sequences(sequences, maxlen=max_len, padding="pre")
-
 print(sequences)
 
 sequences = np.array(sequences)
 X = sequences[:, :-1]
 y = sequences[:, -1]
-
 print(X)
-
 print(y)  # 모든 샘플에 대한 레이블 출력
 
 y = to_categorical(y, num_classes=vocab_size)
-
 print(y)
 
 from tensorflow.keras.models import Sequential
@@ -85,9 +79,7 @@ def sentence_generation(model, tokenizer, current_word, n):  # 모델, 토크나
 
 
 print(sentence_generation(model, tokenizer, "경마장에", 4))
-
 print(sentence_generation(model, tokenizer, "그의", 2))
-
 print(sentence_generation(model, tokenizer, "가는", 5))
 
 # 2. LSTM을 이용하여 텍스트 생성하기
@@ -105,7 +97,6 @@ df.head()
 
 print("열의 개수: ", len(df.columns))
 print(df.columns)
-
 print(df["headline"].isnull().values.any())
 
 headline = []
@@ -161,9 +152,7 @@ print(sequences[:3])
 sequences = np.array(sequences)
 X = sequences[:, :-1]
 y = sequences[:, -1]
-
 print(X[:3])
-
 print(y[:3])
 
 y = to_categorical(y, num_classes=vocab_size)
@@ -211,5 +200,4 @@ def sentence_generation(model, tokenizer, current_word, n):  # 모델, 토크나
 
 
 print(sentence_generation(model, tokenizer, "i", 10))
-
 print(sentence_generation(model, tokenizer, "how", 10))
