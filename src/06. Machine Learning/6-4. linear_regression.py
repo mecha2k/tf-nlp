@@ -92,6 +92,6 @@ sgd = optimizers.SGD(learning_rate=0.01)
 model.compile(optimizer=sgd, loss="mse", metrics=["mse"])
 
 # 주어진 x와 y데이터에 대해서 오차를 최소화하는 작업을 300번 시도합니다.
-model.fit(x, y, epochs=300)
+model.fit(x, y, epochs=300, verbose=0)
 
 plt.plot(x, model.predict(x), "b", x, y, "k.")

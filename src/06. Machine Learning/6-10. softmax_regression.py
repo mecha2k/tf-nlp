@@ -65,7 +65,9 @@ model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accur
 # 옵티마이저는 경사하강법의 일종인 adam을 사용합니다.
 # 손실 함수(Loss function)는 크로스 엔트로피 함수를 사용합니다.
 # 주어진 X와 y데이터에 대해서 오차를 최소화하는 작업을 200번 시도합니다.
-history = model.fit(X_train, y_train, epochs=200, batch_size=1, validation_data=(X_test, y_test))
+history = model.fit(
+    X_train, y_train, epochs=200, batch_size=1, validation_data=(X_test, y_test), verbose=0
+)
 
 epochs = range(1, len(history.history["accuracy"]) + 1)
 plt.plot(epochs, history.history["loss"])

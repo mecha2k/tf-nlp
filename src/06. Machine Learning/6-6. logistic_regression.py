@@ -13,7 +13,7 @@ model.add(Dense(1, input_dim=1, activation="sigmoid"))
 sgd = optimizers.SGD(learning_rate=0.01)
 model.compile(optimizer=sgd, loss="binary_crossentropy", metrics=["binary_accuracy"])
 
-model.fit(x, y, epochs=200)
+model.fit(x, y, epochs=200, verbose=0)
 
 plt.plot(x, model.predict(x), "b", x, y, "k.")
 plt.savefig("images/06-01")

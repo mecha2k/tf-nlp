@@ -18,8 +18,7 @@ model.add(Dense(1, input_dim=3, activation="linear"))
 
 sgd = optimizers.SGD(learning_rate=0.0001)
 model.compile(optimizer=sgd, loss="mse", metrics=["mse"])
-model.fit(X, y, epochs=2000)
-
+model.fit(X, y, epochs=2000, verbose=0)
 print(model.predict(X))
 
 X_test = np.array([[20, 99, 10], [40, 50, 20]])  # 각각 58점과 56점을 예측해야 합니다.
@@ -34,6 +33,5 @@ model = Sequential()
 model.add(Dense(1, input_dim=2, activation="sigmoid"))
 model.compile(optimizer="sgd", loss="binary_crossentropy", metrics=["binary_accuracy"])
 
-model.fit(X, y, epochs=2000)
-
+model.fit(X, y, epochs=2000, verbose=0)
 print(model.predict(X))
