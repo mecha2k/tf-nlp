@@ -133,23 +133,23 @@ print("CPU threads : ", effective_n_jobs(-1))
 # # model = Word2Vec(sentences=tokenized_data, vector_size=100, window=5, min_count=5, workers=32, sg=0)
 # # model.wv.save_word2vec_format("../data/kor_w2v")
 #
-# model = KeyedVectors.load_word2vec_format("../data/kor_w2v")
-#
-# print("완성된 임베딩 매트릭스의 크기 확인 :", model.vectors.shape)
-# print(model.most_similar("최민식"))
-# print(model.most_similar("히어로"))
-# print(model.most_similar("발연기"))
+model = KeyedVectors.load_word2vec_format("../data/kor_w2v")
+
+print("완성된 임베딩 매트릭스의 크기 확인 :", model.vectors.shape)
+print(model.most_similar("최민식"))
+print(model.most_similar("히어로"))
+print(model.most_similar("발연기"))
 
 # 3. 사전 훈련된 Word2Vec
 # urllib.request.urlretrieve(
 #     "https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz",
 #     filename="../data/GoogleNews-vectors-negative300.bin.gz",
 # )
-word2vec_model = KeyedVectors.load_word2vec_format(
-    "../data/GoogleNews-vectors-negative300.bin.gz", binary=True
-)
-
-print(word2vec_model.vectors.shape)
-print(word2vec_model.similarity("this", "is"))
-print(word2vec_model.similarity("post", "book"))
-print(word2vec_model["book"])
+# word2vec_model = KeyedVectors.load_word2vec_format(
+#     "../data/GoogleNews-vectors-negative300.bin.gz", binary=True
+# )
+#
+# print(word2vec_model.vectors.shape)
+# print(word2vec_model.similarity("this", "is"))
+# print(word2vec_model.similarity("post", "book"))
+# print(word2vec_model["book"])

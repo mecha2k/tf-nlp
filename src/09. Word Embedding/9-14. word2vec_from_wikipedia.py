@@ -5,24 +5,28 @@
 # !git clone https://github.com/SOMJANG/Mecab-ko-for-Google-Colab.git
 # %cd Mecab-ko-for-Google-Colab
 # !bash install_mecab-ko_on_colab190912.sh
-
 # !wget https://dumps.wikimedia.org/kowiki/latest/kowiki-latest-pages-articles.xml.bz2
 
 # import urllib.request
-# urllib.request.urlretrieve("https://dumps.wikimedia.org/kowiki/latest/kowiki-latest-pages-articles.xml.bz2", filename="kowiki-latest-pages-articles.xml.bz2")
+# urllib.request.urlretrieve(
+#     "https://dumps.wikimedia.org/kowiki/latest/kowiki-latest-pages-articles.xml.bz2",
+#     filename="../data/kowiki-latest-pages-articles.xml.bz2",
+# )
 
 # !python -m wikiextractor.WikiExtractor kowiki-latest-pages-articles.xml.bz2
 
-# Commented out IPython magic to ensure Python compatibility.
-# %ls
+from konlpy.tag import Mecab
+from gensim.models import Word2Vec
 
-# Commented out IPython magic to ensure Python compatibility.
-# %ls text/AA
+from tqdm import tqdm
+import platform
+import os, re
 
-import os
-import re
-
-os.listdir("text")
+osname = platform.system()
+if osname == "Windows":
+    mecab = Mecab(dicpath="C:/mecab/mecab-ko-dic")
+else:
+    mecab = Mecab()
 
 
 def list_wiki(dirname):
@@ -41,59 +45,50 @@ def list_wiki(dirname):
     return sorted(filepaths)
 
 
-filepaths = list_wiki("text")
+# filepaths = list_wiki("../data/text")
+# print(os.listdir("../data/text"))
+# print(len(filepaths))
+# print(type(filepaths))
+#
+#
+# with open("../data/text/output_file.txt", "w") as outfile:
+#     for filename in filepaths:
+#         with open(filename) as infile:
+#             contents = infile.read()
+#             outfile.write(contents)
+#
+# f = open("../data/text/output_file.txt", encoding="utf8")
+#
+# i = 0
+# while True:
+#     line = f.readline()
+#     if line != "\n":
+#         i = i + 1
+#         print("%d번째 줄 :" % i + line)
+#     if i == 10:
+#         break
+# f.close()
 
-len(filepaths)
 
-with open("output_file.txt", "w") as outfile:
-    for filename in filepaths:
-        with open(filename) as infile:
-            contents = infile.read()
-            outfile.write(contents)
-
-f = open("output_file.txt", encoding="utf8")
-
-i = 0
-while True:
-    line = f.readline()
-    if line != "\n":
-        i = i + 1
-        print("%d번째 줄 :" % i + line)
-    if i == 10:
-        break
-f.close()
-
-from konlpy.tag import Mecab
-
-mecab = Mecab()
-
-from tqdm import tqdm
-
-f = open("output_file.txt", encoding="utf8")
-
+f = open("../data/text/output_file.txt", encoding="utf8")
 lines = f.read().splitlines()
 print(len(lines))
-
 print(lines[:10])
 
-result = []
 
+lines = lines[:1000000]
+
+result = []
 for line in tqdm(lines):
     # 빈 문자열이 아닌 경우에만 수행
     if line:
         result.append(mecab.morphs(line))
+print(len(result))
 
-len(result)
-
-from gensim.models import Word2Vec
-
-model = Word2Vec(result, size=100, window=5, min_count=5, workers=4, sg=0)
-
+model = Word2Vec(result, vector_size=100, window=5, min_count=5, workers=16, sg=0)
 model_result1 = model.wv.most_similar("대한민국")
 print(model_result1)
-
 model_result2 = model.wv.most_similar("어벤져스")
 print(model_result2)
-
 model_result3 = model.wv.most_similar("반도체")
 print(model_result3)
