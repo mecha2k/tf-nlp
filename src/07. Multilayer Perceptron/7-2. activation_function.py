@@ -9,6 +9,7 @@ def step(x):
 # -5.0부터 5.0까지 0.1 간격 생성
 x = np.arange(-5.0, 5.0, 0.1)
 y = step(x)
+plt.plot(x, y)
 plt.title("Step Function")
 plt.plot(x, y)
 plt.savefig("images/step")
@@ -21,9 +22,9 @@ def sigmoid(x):
 x = np.arange(-5.0, 5.0, 0.1)
 y = sigmoid(x)
 
-plt.plot(x, y)
-
 # 가운데 점선 추가
+fig = plt.figure(figsize=(10, 6))
+plt.plot(x, y)
 plt.plot([0, 0], [1.0, 0.0], ":")
 plt.title("Sigmoid Function")
 plt.savefig("images/sigmoid")
@@ -32,6 +33,7 @@ plt.savefig("images/sigmoid")
 x = np.arange(-5.0, 5.0, 0.1)
 y = np.tanh(x)
 
+fig = plt.figure(figsize=(10, 6))
 plt.plot(x, y)
 plt.plot([0, 0], [1.0, -1.0], ":")
 plt.axhline(y=0, color="orange", linestyle="--")
@@ -46,6 +48,7 @@ def relu(x):
 x = np.arange(-5.0, 5.0, 0.1)
 y = relu(x)
 
+fig = plt.figure(figsize=(10, 6))
 plt.plot(x, y)
 plt.plot([0, 0], [5.0, 0.0], ":")
 plt.title("Relu Function")
@@ -61,6 +64,7 @@ def leaky_relu(x):
 x = np.arange(-5.0, 5.0, 0.1)
 y = leaky_relu(x)
 
+fig = plt.figure(figsize=(10, 6))
 plt.plot(x, y)
 plt.plot([0, 0], [5.0, 0.0], ":")
 plt.title("Leaky ReLU Function")
@@ -69,6 +73,7 @@ plt.savefig("images/leaky_relu")
 x = np.arange(-5.0, 5.0, 0.1)  # -5.0부터 5.0까지 0.1 간격 생성
 y = np.exp(x) / np.sum(np.exp(x))
 
+fig = plt.figure(figsize=(10, 6))
 plt.plot(x, y)
 plt.title("Softmax Function")
 plt.savefig("images/softmax")
