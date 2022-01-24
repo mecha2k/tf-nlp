@@ -77,7 +77,7 @@ model.add(TimeDistributed(Dense(vocab_size, activation="softmax")))
 model.summary()
 
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-model.fit(train_X, train_y, epochs=80, verbose=1)
+model.fit(train_X, train_y, epochs=80, verbose=0)
 
 
 def sentence_generation(model, length):
@@ -178,7 +178,7 @@ model.add(LSTM(hidden_units, input_shape=(X_data_one_hot.shape[1], X_data_one_ho
 model.add(Dense(vocab_size, activation="softmax"))
 
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-model.fit(X_data_one_hot, y_data_one_hot, epochs=100, verbose=2)
+model.fit(X_data_one_hot, y_data_one_hot, epochs=100, verbose=0)
 
 
 def sentence_generation(model, char_to_index, seq_length, seed_text, n):

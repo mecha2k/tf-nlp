@@ -47,7 +47,7 @@ model.add(Embedding(vocab_size, embedding_dim))
 model.add(SimpleRNN(hidden_units))
 model.add(Dense(vocab_size, activation="softmax"))
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-model.fit(X, y, epochs=200, verbose=2)
+model.fit(X, y, epochs=200, verbose=0)
 
 
 def sentence_generation(model, tokenizer, current_word, n):  # 모델, 토크나이저, 현재 단어, 반복할 횟수
@@ -63,14 +63,13 @@ def sentence_generation(model, tokenizer, current_word, n):  # 모델, 토크나
         result = model.predict(encoded, verbose=0)
         result = np.argmax(result, axis=1)
 
+        word = None
         for word, index in tokenizer.word_index.items():
             # 만약 예측한 단어와 인덱스와 동일한 단어가 있다면 break
             if index == result:
                 break
-
         # 현재 단어 + ' ' + 예측 단어를 현재 단어로 변경
         current_word = current_word + " " + word
-
         # 예측 단어를 문장에 저장
         sentence = sentence + " " + word
 
@@ -162,7 +161,7 @@ model.add(Embedding(vocab_size, embedding_dim))
 model.add(LSTM(hidden_units))
 model.add(Dense(vocab_size, activation="softmax"))
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-model.fit(X, y, epochs=200, verbose=2)
+model.fit(X, y, epochs=200, verbose=0)
 
 
 def sentence_generation(model, tokenizer, current_word, n):  # 모델, 토크나이저, 현재 단어, 반복할 횟수
@@ -178,14 +177,13 @@ def sentence_generation(model, tokenizer, current_word, n):  # 모델, 토크나
         result = model.predict(encoded, verbose=0)
         result = np.argmax(result, axis=1)
 
+        word = None
         for word, index in tokenizer.word_index.items():
             # 만약 예측한 단어와 인덱스와 동일한 단어가 있다면
             if index == result:
                 break
-
         # 현재 단어 + ' ' + 예측 단어를 현재 단어로 변경
         current_word = current_word + " " + word
-
         # 예측 단어를 문장에 저장
         sentence = sentence + " " + word
 
