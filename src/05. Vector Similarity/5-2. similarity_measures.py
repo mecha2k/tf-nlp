@@ -14,7 +14,7 @@ print("문서1과 문서Q의 거리 :", dist(doc1, docQ))
 print("문서2과 문서Q의 거리 :", dist(doc2, docQ))
 print("문서3과 문서Q의 거리 :", dist(doc3, docQ))
 
-"""# 2. 자카드 유사도"""
+# 2. 자카드 유사도
 
 doc1 = "apple banana everyone like likey watch card holder"
 doc2 = "apple banana coupon passport love you"
@@ -30,5 +30,4 @@ print("문서1과 문서2의 합집합 :", union)
 
 intersection = set(tokenized_doc1).intersection(set(tokenized_doc2))
 print("문서1과 문서2의 교집합 :", intersection)
-
 print("자카드 유사도 :", len(intersection) / len(union))
