@@ -1,6 +1,9 @@
 import numpy as np
 import urllib.request
 from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM, TimeDistributed
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # urllib.request.urlretrieve("http://www.gutenberg.org/files/11/11-0.txt", filename="11-0.txt")
 f = open("11-0.txt", "rb")
@@ -12,12 +15,10 @@ for sentence in f:  # 데이터를 한 줄씩 읽는다.
     if len(sentence) > 0:
         sentences.append(sentence)
 f.close()
-
 print(sentences[:5])
 
 total_data = " ".join(sentences)
 print("문자열의 길이 또는 총 글자의 개수: %d" % len(total_data))
-
 print(total_data[:200])
 
 char_vocab = sorted(list(set(total_data)))
@@ -58,7 +59,6 @@ print("X 데이터의 첫번째 샘플 디코딩 :", [index_to_char[i] for i in 
 print("y 데이터의 첫번째 샘플 디코딩 :", [index_to_char[i] for i in train_y[0]])
 
 print(train_X[1])
-
 print(train_y[1])
 
 train_X = to_categorical(train_X)
@@ -67,8 +67,6 @@ train_y = to_categorical(train_y)
 print("train_X의 크기(shape) : {}".format(train_X.shape))  # 원-핫 인코딩
 print("train_y의 크기(shape) : {}".format(train_y.shape))  # 원-핫 인코딩
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, LSTM, TimeDistributed
 
 hidden_units = 256
 
@@ -79,7 +77,7 @@ model.add(TimeDistributed(Dense(vocab_size, activation="softmax")))
 model.summary()
 
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-model.fit(train_X, train_y, epochs=80, verbose=2)
+model.fit(train_X, train_y, epochs=80, verbose=1)
 
 
 def sentence_generation(model, length):
@@ -106,14 +104,10 @@ result = sentence_generation(model, 100)
 print(result)
 
 # 2. 글자 단위 RNN(Char RNN)으로 텍스트 생성하기
-
 # 이번에는 다 대 일(many-to-one) 구조의 RNN을 글자 단위로 학습시키고, 텍스트 생성을 해보겠습니다.
 
-
-import numpy as np
-from tensorflow.keras.utils import to_categorical
-
-raw_text = """I get on with life as a programmer,
+raw_text = """
+I get on with life as a programmer,
 I like to contemplate beer.
 But when I start to daydream,
 My mind turns straight to wine.
@@ -130,8 +124,8 @@ And I'm happy once again.
 
 I like to hang out with programming and deep learning.
 But when left alone,
-My mind turns straight to wine."""
-
+My mind turns straight to wine.
+"""
 
 tokens = raw_text.split()
 raw_text = " ".join(tokens)
@@ -153,14 +147,12 @@ for i in range(length, len(raw_text)):
     seq = raw_text[i - length : i]  # 길이 11의 문자열을 지속적으로 만든다.
     sequences.append(seq)
 print("총 훈련 샘플의 수: %d" % len(sequences))
-
 print(sequences[:10])
 
 encoded_sequences = []
 for sequence in sequences:  # 전체 데이터에서 문장 샘플을 1개씩 꺼낸다.
     encoded_sequence = [char_to_index[char] for char in sequence]  # 문장 샘플에서 각 글자에 대해서 정수 인코딩을 수행.
     encoded_sequences.append(encoded_sequence)
-
 print(encoded_sequences[:5])
 
 encoded_sequences = np.array(encoded_sequences)
@@ -176,12 +168,8 @@ print(y_data[:5])
 X_data_one_hot = [to_categorical(encoded, num_classes=vocab_size) for encoded in X_data]
 X_data_one_hot = np.array(X_data_one_hot)
 y_data_one_hot = to_categorical(y_data, num_classes=vocab_size)
-
 print(X_data_one_hot.shape)
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, LSTM
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 hidden_units = 64
 
