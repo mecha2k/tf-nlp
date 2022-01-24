@@ -1,7 +1,6 @@
 import nltk
 from konlpy.tag import Okt
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import CountVectorizer
 from nltk.corpus import stopwords
 
 

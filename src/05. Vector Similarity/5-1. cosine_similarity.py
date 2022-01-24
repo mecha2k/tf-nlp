@@ -2,6 +2,10 @@ from numpy import dot
 from numpy.linalg import norm
 import numpy as np
 
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 def cos_sim(A, B):
     return dot(A, B) / (norm(A) * norm(B))
@@ -17,15 +21,12 @@ print("문서 2와 문서3의 유사도 :", cos_sim(doc2, doc3))
 
 # 2. 유사도를 이용한 추천 시스템 구현하기
 
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
 data = pd.read_csv("../data/movies_metadata.csv", low_memory=False)
-print(data.head(2))
+print(data)
 
-data = data.head(20000)
-print("overview 열의 결측값의 수:", data["overview"].isnull().sum())
+data = data[:20000]
+print("overview 열의 결측값의 수:", data["overview"].isna().sum())
 
 data["overview"] = data["overview"].fillna("")
 tfidf = TfidfVectorizer(stop_words="english")
@@ -49,4 +50,4 @@ def get_recommendations(title, cosine_sim=cosine_sim):
     return data["title"].iloc[movie_indices]
 
 
-get_recommendations("The Dark Knight Rises")
+print(get_recommendations("The Dark Knight Rises"))
