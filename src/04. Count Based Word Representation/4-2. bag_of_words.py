@@ -4,11 +4,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.corpus import stopwords
 
-nltk.download("stopwords", quiet=True)
-
-# 1. Bag of Words
-okt = Okt()
-
 
 def build_bag_of_words(document):
     # 온점 제거
@@ -30,6 +25,9 @@ def build_bag_of_words(document):
 
     return word_to_index, bow
 
+
+okt = Okt()
+nltk.download("stopwords", quiet=True)
 
 doc1 = "정부가 발표하는 물가상승률과 소비자가 느끼는 물가상승률은 다르다."
 vocab, bow = build_bag_of_words(doc1)

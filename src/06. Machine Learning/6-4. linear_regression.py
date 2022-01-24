@@ -86,7 +86,7 @@ model = Sequential()
 model.add(Dense(1, input_dim=1, activation="linear"))
 
 # sgd는 경사 하강법을 의미. 학습률(learning rate, lr)은 0.01.
-sgd = optimizers.SGD(lr=0.01)
+sgd = optimizers.SGD(learning_rate=0.01)
 
 # 손실 함수(Loss function)은 평균제곱오차 mse를 사용합니다.
 model.compile(optimizer=sgd, loss="mse", metrics=["mse"])
