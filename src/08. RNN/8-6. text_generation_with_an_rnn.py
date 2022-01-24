@@ -93,17 +93,15 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
 
 df = pd.read_csv("../data/ArticlesApril2018.csv")
-df.head()
-
+print(df.head())
 print("열의 개수: ", len(df.columns))
 print(df.columns)
-print(df["headline"].isnull().values.any())
+print(df["headline"].isna().values.any())
 
 headline = []
 # 헤드라인의 값들을 리스트로 저장
 headline.extend(list(df.headline.values))
 print(headline[:5])
-
 print("총 샘플의 개수 : {}".format(len(headline)))  # 현재 샘플의 개수
 
 # Unknown 값을 가진 샘플 제거
@@ -126,21 +124,17 @@ vocab_size = len(tokenizer.word_index) + 1
 print("단어 집합의 크기 : %d" % vocab_size)
 
 sequences = list()
-
 for sentence in preporcessed_headline:
-
     # 각 샘플에 대한 정수 인코딩
     encoded = tokenizer.texts_to_sequences([sentence])[0]
     for i in range(1, len(encoded)):
         sequence = encoded[: i + 1]
         sequences.append(sequence)
-
 print(sequences[:11])
 
 index_to_word = {}
 for key, value in tokenizer.word_index.items():  # 인덱스를 단어로 바꾸기 위해 index_to_word를 생성
     index_to_word[value] = key
-
 print("빈도수 상위 582번 단어 : {}".format(index_to_word[582]))
 
 max_len = max(len(l) for l in sequences)
