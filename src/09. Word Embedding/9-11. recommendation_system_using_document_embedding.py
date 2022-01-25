@@ -102,13 +102,13 @@ def get_document_vectors(document_list):
     return document_embedding_list
 
 
-# document_embedding_list = get_document_vectors(df["cleaned"])
-# print("문서 벡터의 수 :", len(document_embedding_list))
-#
-# # 4. 추천 시스템 구현하기
-# cosine_similarities = cosine_similarity(document_embedding_list, document_embedding_list)
-# print(cosine_similarities[0])
-# print("코사인 유사도 매트릭스의 크기 :", cosine_similarities.shape)
+document_embedding_list = get_document_vectors(df["cleaned"])
+print("문서 벡터의 수 :", len(document_embedding_list))
+
+# 4. 추천 시스템 구현하기
+cosine_similarities = cosine_similarity(document_embedding_list, document_embedding_list)
+print(cosine_similarities[0])
+print("코사인 유사도 매트릭스의 크기 :", cosine_similarities.shape)
 
 
 def recommendations(title, filename):
@@ -141,5 +141,5 @@ def recommendations(title, filename):
         plt.savefig(filename, dpi=300)
 
 
-# recommendations("The Da Vinci Code", "images/davinci")
-# recommendations("The Murder of Roger Ackroyd", "images/roger")
+recommendations("The Da Vinci Code", "images/davinci")
+recommendations("The Murder of Roger Ackroyd", "images/roger")
