@@ -79,7 +79,6 @@ w2v_model.train(corpus, total_examples=w2v_model.corpus_count, epochs=15)
 # 3. 단어 벡터의 평균 구하기
 def get_document_vectors(document_list):
     document_embedding_list = []
-
     # 각 문서에 대해서
     for line in document_list:
         doc2vec = None
@@ -92,12 +91,10 @@ def get_document_vectors(document_list):
                     doc2vec = w2v_model.wv.get_vector(word)
                 else:
                     doc2vec = doc2vec + w2v_model.wv.get_vector(word)
-
         if doc2vec is not None:
             # 단어 벡터를 모두 더한 벡터의 값을 문서 길이로 나눠준다.
             doc2vec = doc2vec / count
             document_embedding_list.append(doc2vec)
-
     # 각 문서에 대한 문서 벡터 리스트를 리턴
     return document_embedding_list
 
@@ -128,9 +125,9 @@ def recommendations(title, filename):
 
     # 전체 데이터프레임에서 해당 인덱스의 행만 추출. 5개의 행을 가진다.
     recommend = books.iloc[book_indices].reset_index(drop=True)
+    print(recommend["title"])
 
-    fig = plt.figure(figsize=(20, 30))
-
+    fig = plt.figure(figsize=(20, 12))
     # 데이터프레임으로부터 순차적으로 이미지를 출력
     for index, row in recommend.iterrows():
         response = requests.get(row["image_link"])
