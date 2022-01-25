@@ -1,13 +1,12 @@
 import nltk
-
-nltk.download("punkt")
-
 import urllib.request
 import zipfile
 from lxml import etree
 import re
 from nltk.tokenize import word_tokenize, sent_tokenize
 from glove import Corpus, Glove
+
+nltk.download("punkt", quiet=True)
 
 # 데이터 다운로드
 # urllib.request.urlretrieve("https://raw.githubusercontent.com/GaoleMeng/RNN-and-FFNN-textClassification"

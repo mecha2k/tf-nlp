@@ -1,14 +1,14 @@
 import nltk
 import numpy as np
-
-nltk.download("punkt")
-
 import urllib.request
 import zipfile
 from lxml import etree
 import re
 from nltk.tokenize import word_tokenize, sent_tokenize
 from gensim.models import Word2Vec, FastText
+from icecream import ic
+
+nltk.download("punkt", quiet=True)
 
 # # 데이터 다운로드
 # targetXML = open("../data/ted_en-20160408.xml", "r", encoding="UTF8")
@@ -36,9 +36,12 @@ from gensim.models import Word2Vec, FastText
 result = np.load("../data/ted_en_token.npy", allow_pickle=True)
 print("총 샘플의 개수 : {}".format(len(result)))
 
+model = Word2Vec(sentences=result, vector_size=100, window=5, min_count=5, workers=16, sg=1)
+try:
+    sim_word = model.wv.most_similar("electrofishing")
+    print(sim_word)
+except Exception as e:
+    print(e)
 
-# model = Word2Vec(sentences=result, vector_size=100, window=5, min_count=5, workers=4, sg=0)
-# model.wv.most_similar("electrofishing")
-
-model = FastText(result, vector_size=100, window=5, min_count=5, workers=4, sg=1)
-model.wv.most_similar("electrofishing")
+model = FastText(sentences=result, vector_size=100, window=5, min_count=5, workers=16, sg=1)
+ic(model.wv.most_similar("electrofishing"))
