@@ -23,41 +23,16 @@ import pandas as pd
 import urllib.request
 from tqdm import tqdm
 import hgtk
+import fasttext
 from konlpy.tag import Mecab
+from icecream import ic
+import platform
 
-urllib.request.urlretrieve(
-    "https://raw.githubusercontent.com/bab2min/corpus/master/sentiment/naver_shopping.txt",
-    filename="../data/ratings_total.txt",
-)
-
-total_data = pd.read_table("../data/ratings_total.txt", names=["ratings", "reviews"])
-print("전체 리뷰 개수 :", len(total_data))  # 전체 리뷰 개수 출력
-print(total_data[:5])
-
-# 2. hgtk 튜토리얼
-
-# 한글인지 체크
-hgtk.checker.is_hangul("ㄱ")
-
-# 한글인지 체크
-hgtk.checker.is_hangul("28")
-
-# 음절을 초성, 중성, 종성으로 분해
-hgtk.letter.decompose("남")
-
-# 초성, 중성을 결합
-hgtk.letter.compose("ㄴ", "ㅏ")
-
-# 초성, 중성, 종성을 결합
-hgtk.letter.compose("ㄴ", "ㅏ", "ㅁ")
-
-# 한글이 아닌 입력에 대해서는 에러 발생.
-# hgtk.letter.decompose("1")
-
-# 결합할 수 없는 상황에서는 에러 발생
-# hgtk.letter.compose("ㄴ", "ㅁ", "ㅁ")
-
-# 3. 데이터 전처리
+osname = platform.system()
+if osname == "Windows":
+    mecab = Mecab(dicpath="C:/mecab/mecab-ko-dic")
+else:
+    mecab = Mecab()
 
 
 def word_to_jamo(token):
@@ -88,29 +63,8 @@ def word_to_jamo(token):
     return decomposed_token
 
 
-word_to_jamo("남동생")
-
-word_to_jamo("여동생")
-
-mecab = Mecab()
-
-print(mecab.morphs("선물용으로 빨리 받아서 전달했어야 하는 상품이었는데 머그컵만 와서 당황했습니다."))
-
-
 def tokenize_by_jamo(s):
     return [word_to_jamo(token) for token in mecab.morphs(s)]
-
-
-print(tokenize_by_jamo("선물용으로 빨리 받아서 전달했어야 하는 상품이었는데 머그컵만 와서 당황했습니다."))
-
-tokenized_data = []
-
-for sample in tqdm(total_data["reviews"].to_list()):
-    tokenzied_sample = tokenize_by_jamo(sample)  # 자소 단위 토큰화
-    tokenized_data.append(tokenzied_sample)
-
-print(len(tokenized_data))
-print(tokenized_data[0])
 
 
 def jamo_to_word(jamo_sequence):
@@ -119,7 +73,6 @@ def jamo_to_word(jamo_sequence):
 
     # 1. 초기 입력
     # jamo_sequence = 'ㄴㅏㅁㄷㅗㅇㅅㅐㅇ'
-
     while index < len(jamo_sequence):
         # 문자가 한글(정상적인 자모)이 아닐 경우
         if not hgtk.checker.is_hangul(jamo_sequence[index]):
@@ -162,24 +115,64 @@ def jamo_to_word(jamo_sequence):
     return word
 
 
-jamo_to_word("ㄴㅏㅁㄷㅗㅇㅅㅐㅇ")
+# urllib.request.urlretrieve(
+#     "https://raw.githubusercontent.com/bab2min/corpus/master/sentiment/naver_shopping.txt",
+#     filename="../data/ratings_total.txt",
+# )
 
-# 4. FastText
+# total_data = pd.read_table("../data/ratings_total.txt", names=["ratings", "reviews"])
+# print("전체 리뷰 개수 :", len(total_data))  # 전체 리뷰 개수 출력
+# print(total_data[:5])
+#
+# # 2. hgtk 튜토리얼
+# # 한글인지 체크
+# ic(hgtk.checker.is_hangul("ㄱ"))
+# # 한글인지 체크
+# ic(hgtk.checker.is_hangul("28"))
+# # 음절을 초성, 중성, 종성으로 분해
+# ic(hgtk.letter.decompose("남"))
+# # 초성, 중성을 결합
+# ic(hgtk.letter.compose("ㄴ", "ㅏ"))
+# # 초성, 중성, 종성을 결합
+# ic(hgtk.letter.compose("ㄴ", "ㅏ", "ㅁ"))
+#
+# # 한글이 아닌 입력에 대해서는 에러 발생.
+# try:
+#     ic(hgtk.letter.decompose("1"))
+# except Exception as e:
+#     print(e)
+#
+# # 결합할 수 없는 상황에서는 에러 발생
+# try:
+#     ic(hgtk.letter.compose("ㄴ", "ㅁ", "ㅁ"))
+# except Exception as e:
+#     print(e)
+#
+# # 3. 데이터 전처리
+# ic(word_to_jamo("남동생"))
+# ic(word_to_jamo("여동생"))
+# ic(mecab.morphs("선물용으로 빨리 받아서 전달했어야 하는 상품이었는데 머그컵만 와서 당황했습니다."))
+# ic(tokenize_by_jamo("선물용으로 빨리 받아서 전달했어야 하는 상품이었는데 머그컵만 와서 당황했습니다."))
+#
+# tokenized_data = []
+# for sample in tqdm(total_data["reviews"].to_list()):
+#     tokenzied_sample = tokenize_by_jamo(sample)  # 자소 단위 토큰화
+#     tokenized_data.append(tokenzied_sample)
+# print(len(tokenized_data))
+# print(tokenized_data[0])
+#
+# ic(jamo_to_word("ㄴㅏㅁㄷㅗㅇㅅㅐㅇ"))
+#
+# # 4. FastText
+# with open("../data/tokenized_data.txt", "w") as out:
+#     for line in tqdm(tokenized_data, unit=" line"):
+#         out.write(" ".join(line) + "\n")
+#
+# model = fasttext.train_unsupervised("../data/tokenized_data.txt", model="cbow")
+# model.save_model("../data/fasttext.bin")
 
-import fasttext
-
-with open("tokenized_data.txt", "w") as out:
-    for line in tqdm(tokenized_data, unit=" line"):
-        out.write(" ".join(line) + "\n")
-
-model = fasttext.train_unsupervised("tokenized_data.txt", model="cbow")
-
-model.save_model("fasttext.bin")
-
-model = fasttext.load_model("fasttext.bin")
-
+model = fasttext.load_model("../data/fasttext.bin")
 print(model[word_to_jamo("남동생")])  # 'ㄴㅏㅁㄷㅗㅇㅅㅐㅇ'
-
 model.get_nearest_neighbors(word_to_jamo("남동생"), k=10)
 
 
@@ -187,32 +180,18 @@ def transform(word_sequence):
     return [(jamo_to_word(word), similarity) for (similarity, word) in word_sequence]
 
 
-print(transform(model.get_nearest_neighbors(word_to_jamo("남동생"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("남동쉥"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("남동셍ㅋ"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("난동생"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("낫동생"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("납동생"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("냚동생"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("고품질"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("고품쥘"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("노품질"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("보품질"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("제품"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("제품ㅋ"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("제품^^"), k=10)))
-
-print(transform(model.get_nearest_neighbors(word_to_jamo("제푼ㅋ"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("남동생"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("남동쉥"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("남동셍ㅋ"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("난동생"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("낫동생"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("납동생"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("냚동생"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("고품질"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("고품쥘"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("노품질"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("보품질"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("제품"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("제품ㅋ"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("제품^^"), k=10)))
+ic(transform(model.get_nearest_neighbors(word_to_jamo("제푼ㅋ"), k=10)))
