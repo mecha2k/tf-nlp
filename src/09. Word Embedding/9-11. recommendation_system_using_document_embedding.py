@@ -62,6 +62,8 @@ for words in df["cleaned"]:
     corpus.append(words.split())
 print(corpus[0])
 
+corpus = corpus[:100]
+
 # 2. 사전 훈련된 워드 임베딩 사용하기
 # urllib.request.urlretrieve(
 #     "https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz",
@@ -76,6 +78,8 @@ w2v_model.wv.intersect_word2vec_format(
 )
 w2v_model.train(corpus, total_examples=w2v_model.corpus_count, epochs=15)
 
+print(w2v_model.wv)
+
 # 3. 단어 벡터의 평균 구하기
 def get_document_vectors(document_list):
     document_embedding_list = []
@@ -85,7 +89,7 @@ def get_document_vectors(document_list):
         doc2vec = None
         count = 0
         for word in line.split():
-            if word in w2v_model.wv.vocab:
+            if word in w2v_model.wv.key_to_index:
                 count += 1
                 # 해당 문서에 있는 모든 단어들의 벡터값을 더한다.
                 if doc2vec is None:
