@@ -15,6 +15,11 @@ from icecream import ic
 
 # 1. 20뉴스그룹 데이터 전처리하기
 dataset = fetch_20newsgroups(shuffle=True, random_state=1, remove=("headers", "footers", "quotes"))
+# print(dataset.DESCR)
+print(dataset.target_names)
+print(dataset.target.shape)
+print(dataset.filenames.shape)
+
 documents = dataset.data
 ic("총 샘플 수 :", len(documents))
 
@@ -28,12 +33,14 @@ news_df["clean_doc"] = news_df["clean_doc"].apply(
 # 전체 단어에 대한 소문자 변환
 news_df["clean_doc"] = news_df["clean_doc"].apply(lambda x: x.lower())
 ic(news_df.head())
-ic(news_df.isnull().values.any())
+ic(news_df.isna().values.any())
+ic(news_df.isna().any())
+ic(news_df.isna().sum())
 
 news_df.replace("", float("NaN"), inplace=True)
-ic(news_df.isnull().values.any())
+ic(news_df.isna().values.any())
 
-news_df.dropna(inplace=True)
+news_df.dropna(inplace=True, how="any")
 ic(len(news_df))
 
 stop_words = stopwords.words("english")  # NLTK로부터 불용어를 받아옵니다.
@@ -41,13 +48,11 @@ tokenized_doc = news_df["clean_doc"].apply(lambda x: x.split())  # 토큰화
 
 # 불용어를 제거합니다.
 tokenized_doc = tokenized_doc.apply(lambda x: [item for item in x if item not in stop_words])
-
 tokenized_doc = tokenized_doc.to_numpy()
 ic(tokenized_doc.shape)
 
 # 단어가 1개 이하인 경우 중심 단어, 주변 단어가 존재하지 않으므로 불가.
-drop_train = [index for index, sentence in enumerate(tokenized_doc) if len(sentence) <= 1]
-drop_train = np.array(drop_train)
+drop_train = np.array([index for index, sentence in enumerate(tokenized_doc) if len(sentence) <= 1])
 ic(drop_train.shape)
 
 tokenized_doc = np.delete(tokenized_doc, drop_train, axis=0)
@@ -69,6 +74,7 @@ ic("단어 집합의 크기 :", vocab_size)
 skip_grams = [
     skipgrams(sample, vocabulary_size=vocab_size, window_size=10) for sample in encoded[:10]
 ]
+ic(np.array(skip_grams, dtype=object).shape)
 
 # 첫번째 샘플인 skip_grams[0] 내 skipgrams로 형성된 데이터셋 확인
 pairs, labels = skip_grams[0][0], skip_grams[0][1]
@@ -78,12 +84,21 @@ for i in range(5):
             idx2word[pairs[i][0]], pairs[i][0], idx2word[pairs[i][1]], pairs[i][1], labels[i]
         )
     )
-
 ic(len(skip_grams))
 
 # 첫번째 샘플에 대해서 생긴 pairs와 labels
 ic(len(pairs))
 ic(len(labels))
+
+s_grams = skipgrams(encoded[0], vocabulary_size=vocab_size, window_size=10)
+print(encoded[0])
+# print(s_grams[0])
+# print(s_grams[1])
+print(s_grams[0][0][0])
+print(idx2word[s_grams[0][0][0]])
+print(idx2word[s_grams[0][0][1]])
+print(s_grams[1][0])
+
 
 skip_grams = [skipgrams(sample, vocabulary_size=vocab_size, window_size=10) for sample in encoded]
 
