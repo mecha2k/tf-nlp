@@ -1,5 +1,3 @@
-# 1. 품사 태깅 데이터에 대한 이해와 전처리
-
 import nltk
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,11 +6,10 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
 
-nltk.download("treebank")
+nltk.download("treebank", quiet=True)
 
 tagged_sentences = nltk.corpus.treebank.tagged_sents()  # 토큰화에 품사 태깅이 된 데이터 받아오기
 print("품사 태깅이 된 문장 개수: ", len(tagged_sentences))  # 문장 샘플의 개수 출력
-
 print(tagged_sentences[0])  # 첫번째 문장 샘플 출력
 
 sentences, pos_tags = [], []
@@ -45,17 +42,16 @@ print("태깅 정보 집합의 크기 : {}".format(tag_size))
 
 X_train = src_tokenizer.texts_to_sequences(sentences)
 y_train = tar_tokenizer.texts_to_sequences(pos_tags)
-
 print(X_train[:2])
-
 print(y_train[:2])
 
 print("샘플의 최대 길이 : %d" % max(len(l) for l in X_train))
 print("샘플의 평균 길이 : %f" % (sum(map(len, X_train)) / len(X_train)))
-plt.hist([len(s) for s in X_train], bins=50)
+plt.hist(x=[len(s) for s in X_train], bins=50)
 plt.xlabel("length of samples")
 plt.ylabel("number of samples")
-plt.show()
+plt.savefig("images/02-01", dpi=300)
+
 
 max_len = 150
 X_train = pad_sequences(X_train, padding="post", maxlen=max_len)
@@ -71,7 +67,6 @@ print("테스트 샘플 문장의 크기 : {}".format(X_test.shape))
 print("테스트 샘플 레이블의 크기 : {}".format(y_test.shape))
 
 # 2. 양방향 LSTM(Bi-directional LSTM)으로 POS Tagger 만들기
-
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (
     Dense,
@@ -93,7 +88,6 @@ model.add(TimeDistributed(Dense(tag_size, activation="softmax")))
 model.compile(loss="sparse_categorical_crossentropy", optimizer=Adam(0.001), metrics=["accuracy"])
 
 model.fit(X_train, y_train, batch_size=128, epochs=7, validation_data=(X_test, y_test))
-
 print("\n 테스트 정확도: %.4f" % (model.evaluate(X_test, y_test)[1]))
 
 index_to_word = src_tokenizer.index_word
