@@ -19,8 +19,6 @@ df = pd.read_csv("../data/dart.csv", sep=",")
 df = df.dropna()
 print(df)
 
-df = df[:100]
-
 tagged_corpus_list = []
 for index, row in tqdm(df.iterrows(), total=len(df)):
     text = row["business"]
