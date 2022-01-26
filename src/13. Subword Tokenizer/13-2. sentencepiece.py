@@ -1,16 +1,7 @@
-# 1. IMDB 리뷰
-# pip install sentencepiece
-# pip list | grep sentencepiece
-
 import sentencepiece as spm
 import pandas as pd
 import urllib.request
 import csv
-
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/LawrenceDuan/IMDb-Review-Analysis/master/IMDb_Reviews.csv",
-#     filename="../data/IMDb_Reviews.csv",
-# )
 
 train_df = pd.read_csv("../data/IMDb_Reviews.csv")
 print(train_df["review"])
@@ -39,13 +30,9 @@ for line in lines:
     print()
 
 sp.GetPieceSize()
-
 sp.IdToPiece(430)
-
 sp.PieceToId("▁character")
-
 sp.DecodeIds([41, 141, 1364, 1120, 4, 666, 285, 92, 1078, 33, 91])
-
 sp.DecodePieces(
     ["▁I", "▁have", "▁wa", "ited", "▁a", "▁long", "▁time", "▁for", "▁someone", "▁to", "▁film"]
 )
@@ -53,16 +40,12 @@ sp.DecodePieces(
 print(sp.encode("I have waited a long time for someone to film", out_type=str))
 print(sp.encode("I have waited a long time for someone to film", out_type=int))
 
-# 2. 네이버 영화 리뷰
 
 import pandas as pd
 import sentencepiece as spm
 import urllib.request
 import csv
 
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/e9t/nsmc/master/ratings.txt", filename="ratings.txt"
-# )
 
 naver_df = pd.read_table("../data/ratings.txt")
 print(naver_df[:5])

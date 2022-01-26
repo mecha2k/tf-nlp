@@ -1,8 +1,6 @@
 import re, collections
-from IPython.display import display, Markdown, Latex
 
 num_merges = 10
-
 dictionary = {"l o w </w>": 5, "l o w e r </w>": 2, "n e w e s t </w>": 6, "w i d e s t </w>": 3}
 
 
@@ -31,7 +29,7 @@ bpe_codes = {}
 bpe_codes_reverse = {}
 
 for i in range(num_merges):
-    display(Markdown("### Iteration {}".format(i + 1)))
+    # display(Markdown("### Iteration {}".format(i + 1)))
     pairs = get_stats(dictionary)
     best = max(pairs, key=pairs.get)
     dictionary = merge_dictionary(best, dictionary)
@@ -42,18 +40,13 @@ for i in range(num_merges):
     print("new merge: {}".format(best))
     print("dictionary: {}".format(dictionary))
 
-"""bpe_codes를 출력하면 merge 했던 기록이 출력됩니다.
-
-
-"""
-
+# bpe_codes를 출력하면 merge 했던 기록이 출력됩니다.
 print(bpe_codes)
 
 
 def get_pairs(word):
-    """Return set of symbol pairs in a word.
-    Word is represented as a tuple of symbols (symbols being variable-length strings).
-    """
+    # Return set of symbol pairs in a word.
+    # Word is represented as a tuple of symbols (symbols being variable-length strings).
     pairs = set()
     prev_char = word[0]
     for char in word[1:]:
@@ -63,11 +56,9 @@ def get_pairs(word):
 
 
 def encode(orig):
-    """Encode word based on list of BPE merge operations, which are applied consecutively"""
-
+    # Encode word based on list of BPE merge operations, which are applied consecutively
     word = tuple(orig) + ("</w>",)
-    display(Markdown("__word split into characters:__ <tt>{}</tt>".format(word)))
-
+    # display(Markdown("__word split into characters:__ <tt>{}</tt>".format(word)))
     pairs = get_pairs(word)
 
     if not pairs:
@@ -76,13 +67,12 @@ def encode(orig):
     iteration = 0
     while True:
         iteration += 1
-        display(Markdown("__Iteration {}:__".format(iteration)))
-
+        # display(Markdown("__Iteration {}:__".format(iteration)))
         print("bigrams in the word: {}".format(pairs))
         bigram = min(pairs, key=lambda pair: bpe_codes.get(pair, float("inf")))
         print("candidate for merging: {}".format(bigram))
         if bigram not in bpe_codes:
-            display(Markdown("__Candidate not in BPE merges, algorithm stops.__"))
+            # display(Markdown("__Candidate not in BPE merges, algorithm stops.__"))
             break
         first, second = bigram
         new_word = []
@@ -120,9 +110,6 @@ def encode(orig):
 
 
 encode("loki")
-
 encode("lowest")
-
 encode("lowing")
-
 encode("highing")

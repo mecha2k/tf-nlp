@@ -1,22 +1,15 @@
-# pip install tokenizers
-
 import tokenizers
-
-print(tokenizers.__version__)
-
 import pandas as pd
 import urllib.request
 from tokenizers import BertWordPieceTokenizer
 
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/e9t/nsmc/master/ratings.txt", filename="ratings.txt"
-# )
+print(tokenizers.__version__)
 
 naver_df = pd.read_table("../data/ratings.txt")
 naver_df.head()
 
 naver_df = naver_df.dropna(how="any")  # Null 값이 존재하는 행 제거
-print(naver_df.isnull().values.any())  # Null 값이 존재하는지 확인
+print(naver_df.isna().values.any())  # Null 값이 존재하는지 확인
 
 with open("../data/naver_review.txt", "w", encoding="utf8") as f:
     f.write("\n".join(naver_df["document"]))

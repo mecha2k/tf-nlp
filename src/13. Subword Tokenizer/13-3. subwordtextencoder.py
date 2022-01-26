@@ -46,18 +46,6 @@ for ts in tokenized_string:
     print("{} ----> {}".format(ts, tokenizer.decode([ts])))
 
 # 네이버 영화 리뷰에 대해서도 위에서 IMDB 영화 리뷰에 대해서 수행한 동일한 작업을 진행해봅시다.
-
-# import urllib.request
-
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/e9t/nsmc/master/ratings_train.txt",
-#     filename="ratings_train.txt",
-# )
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/e9t/nsmc/master/ratings_test.txt",
-#     filename="ratings_test.txt",
-# )
-
 train_data = pd.read_table("../data/ratings_train.txt")
 test_data = pd.read_table("../data/ratings_test.txt")
 
