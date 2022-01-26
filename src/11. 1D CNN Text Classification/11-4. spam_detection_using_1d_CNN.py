@@ -20,12 +20,9 @@ del data["Unnamed: 2"]
 del data["Unnamed: 3"]
 del data["Unnamed: 4"]
 data["v1"] = data["v1"].replace(["ham", "spam"], [0, 1])
-print(data[:5])
-
 data.info()
 
 print("결측값 여부 :", data.isnull().values.any())
-
 print("v2열의 유니크한 값 :", data["v2"].nunique())
 
 # v2 열에서 중복인 내용이 있다면 중복 제거
@@ -46,13 +43,8 @@ y_data = data["v1"]
 print("메일 본문의 개수: {}".format(len(X_data)))
 print("레이블의 개수: {}".format(len(y_data)))
 
-"""현재 레이블이 굉장히 불균형하기 때문에 분리 후에도
-
-훈련 데이터와 테스트 데이터의 레이블 비율이 유지되도록 해줍시다.
-
-이는 인자로서 stratify=y데이터를 사용하여 가능합니다.
-"""
-
+# 현재 레이블이 굉장히 불균형하기 때문에 분리 후에도 훈련 데이터와 테스트 데이터의 레이블 비율이 유지되도록 해줍시다.
+# 이는 인자로서 stratify=y데이터를 사용하여 가능합니다.
 # X_data와 y_data를 8:2 비율로 분할
 X_train, X_test, y_train, y_test = train_test_split(
     X_data, y_data, test_size=0.2, random_state=0, stratify=y_data
