@@ -1,18 +1,4 @@
 import tensorflow as tf
-
-# CRF layer 설치
-# !pip install keras-crf==0.3.0
-
-# 모델 평가
-# !pip install seqeval
-
-# !pip list | grep keras-crf
-
-# ner_dataset.csv를 Colab에 업로드하세요.
-
-# 데이터 전처리
-
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,15 +8,13 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 
 data = pd.read_csv("../data/ner_dataset.csv", encoding="latin1")
-print(data[:5])
+print(data)
 
 print("데이터프레임 행의 개수 : {}".format(len(data)))
-
-print("데이터에 Null 값이 있는지 유무 : " + str(data.isnull().values.any()))
-
+print("데이터에 Null 값이 있는지 유무 : " + str(data.isna().values.any()))
 print("어떤 열에 Null값이 있는지 출력")
 print("==============================")
-print(data.isnull().sum())
+print(data.isna().sum())
 
 print("sentence # 열의 중복을 제거한 값의 개수 : {}".format(data["Sentence #"].nunique()))
 print("Word 열의 중복을 제거한 값의 개수 : {}".format(data.Word.nunique()))
@@ -41,22 +25,18 @@ print("================================")
 print(data.groupby("Tag").size().reset_index(name="count"))
 
 data = data.fillna(method="ffill")
-
 print(data.tail())
-
-print("데이터에 Null 값이 있는지 유무 : " + str(data.isnull().values.any()))
+print("데이터에 Null 값이 있는지 유무 : " + str(data.isna().values.any()))
 
 data["Word"] = data["Word"].str.lower()
 print("Word 열의 중복을 제거한 값의 개수 : {}".format(data.Word.nunique()))
-
-print(data[:5])
+print(data)
 
 func = lambda temp: [
     (w, t) for w, t in zip(temp["Word"].values.tolist(), temp["Tag"].values.tolist())
 ]
 tagged_sentences = [t for t in data.groupby("Sentence #").apply(func)]
 print("전체 샘플 개수: {}".format(len(tagged_sentences)))
-
 print(tagged_sentences[0])  # 첫번째 샘플 출력
 
 sentences, ner_tags = [], []
@@ -76,7 +56,7 @@ print("샘플의 평균 길이 : %f" % (sum(map(len, sentences)) / len(sentences
 plt.hist([len(s) for s in sentences], bins=50)
 plt.xlabel("length of samples")
 plt.ylabel("number of samples")
-plt.show()
+plt.savefig("images/05-01", dpi=300)
 
 src_tokenizer = Tokenizer(oov_token="OOV")  # 모든 단어를 사용하지만 인덱스 1에는 단어 'OOV'를 할당한다.
 src_tokenizer.fit_on_texts(sentences)
@@ -87,12 +67,10 @@ vocab_size = len(src_tokenizer.word_index) + 1
 tag_size = len(tar_tokenizer.word_index) + 1
 print("단어 집합의 크기 : {}".format(vocab_size))
 print("개체명 태깅 정보 집합의 크기 : {}".format(tag_size))
-
 print("단어 OOV의 인덱스 : {}".format(src_tokenizer.word_index["OOV"]))
 
 X_data = src_tokenizer.texts_to_sequences(sentences)
 y_data = tar_tokenizer.texts_to_sequences(ner_tags)
-
 print(X_data[0])
 print(y_data[0])
 
@@ -101,27 +79,23 @@ index_to_word = src_tokenizer.index_word
 ner_to_index = tar_tokenizer.word_index
 index_to_ner = tar_tokenizer.index_word
 index_to_ner[0] = "PAD"
-
 print(index_to_ner)
 
 decoded = []
 for index in X_data[0]:  # 첫번째 샘플 안의 인덱스들에 대해서
     decoded.append(index_to_word[index])  # 다시 단어로 변환
-
 print("기존의 문장 : {}".format(sentences[0]))
 print("디코딩 문장 : {}".format(decoded))
 
 max_len = 70
 X_data = pad_sequences(X_data, padding="post", maxlen=max_len)
 y_data = pad_sequences(y_data, padding="post", maxlen=max_len)
-
 print(X_data.shape)
 print(y_data.shape)
 
 X_train, X_test, y_train_int, y_test_int = train_test_split(
     X_data, y_data, test_size=0.2, random_state=777
 )
-
 y_train = to_categorical(y_train_int, num_classes=tag_size)
 y_test = to_categorical(y_test_int, num_classes=tag_size)
 
@@ -147,7 +121,6 @@ char_to_index["PAD"] = 0
 index_to_char = {}
 for key, value in char_to_index.items():
     index_to_char[value] = key
-
 print(sentences[0])
 
 max_len_char = 15
@@ -175,9 +148,7 @@ X_char_data = integer_coding(sentences)
 
 # 정수 인코딩 이전의 기존 문장
 print(sentences[0])
-
 print(X_data[0])
-
 print(X_char_data[0])
 
 X_char_data = pad_sequences(X_char_data, maxlen=max_len, padding="post", value=0)
@@ -190,13 +161,9 @@ X_char_train = np.array(X_char_train)
 X_char_test = np.array(X_char_test)
 
 print(X_train[0])
-
 print(index_to_word[150])
-
 print(X_char_train[0])
-
 print(X_char_train[0][0])
-
 print(" ".join([index_to_char[index] for index in X_char_train[0][0]]))
 
 print("훈련 샘플 문장의 크기 : {}".format(X_train.shape))
@@ -206,10 +173,6 @@ print("테스트 샘플 문장의 크기 : {}".format(X_test.shape))
 print("테스트 샘플 레이블의 크기 : {}".format(y_test.shape))
 
 # BiLSTM을 이용한 개체명 인식
-
-## 모델링
-
-
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (
     Dense,
@@ -253,7 +216,7 @@ plt.title("model loss")
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.legend(["train", "val"], loc="upper left")
-plt.show()
+plt.savefig("images/05-02", dpi=300)
 
 from seqeval.metrics import f1_score, classification_report
 
@@ -274,16 +237,9 @@ pred_tags = sequences_to_tag(y_predicted)
 test_tags = sequences_to_tag(y_test)
 
 print(classification_report(test_tags, pred_tags))
-
-## 성능
-
 print("F1-score: {:.1%}".format(f1_score(test_tags, pred_tags)))
 
 # BiLSTM-CRF를 이용한 개체명인식
-
-## 모델링
-
-
 import tensorflow as tf
 from tensorflow.keras import Model
 from tensorflow.keras.layers import (
@@ -377,16 +333,9 @@ pred_tags = sequences_to_tag_for_crf(y_predicted)
 test_tags = sequences_to_tag(y_test)
 
 print(classification_report(test_tags, pred_tags))
-
-## 성능
-
 print("F1-score: {:.1%}".format(f1_score(test_tags, pred_tags)))
 
 # BiLSTM-CNN을 이용한 개체명인식
-
-## 모델링
-
-
 from tensorflow.keras.layers import (
     Embedding,
     Input,
@@ -496,7 +445,7 @@ plt.title("model loss")
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.legend(["train", "val"], loc="upper left")
-plt.show()
+plt.savefig("images/05-03", dpi=300)
 
 
 def sequences_to_tag(sequences):  # 예측값을 index_to_ner를 사용하여 태깅 정보로 변경하는 함수.
@@ -515,16 +464,9 @@ pred_tags = sequences_to_tag(y_predicted)
 test_tags = sequences_to_tag(y_test)
 
 print(classification_report(test_tags, pred_tags))
-
-## 성능
-
 print("F1-score: {:.1%}".format(f1_score(test_tags, pred_tags)))
 
 # BiLSTM-CNN-CRF를 이용한 개체명인식
-
-## 모델링
-
-
 import tensorflow as tf
 from keras_crf import CRFModel
 
@@ -622,23 +564,16 @@ plt.title("model loss")
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.legend(["train", "val"], loc="upper left")
-plt.show()
+plt.savefig("images/05-04", dpi=300)
 
 y_predicted = model.predict([X_test, X_char_test])[0]
 pred_tags = sequences_to_tag_for_crf(y_predicted)
 test_tags = sequences_to_tag(y_test)
 
 print(classification_report(test_tags, pred_tags))
-
-## 성능
-
 print("F1-score: {:.1%}".format(f1_score(test_tags, pred_tags)))
 
 # BiLSTM-BiLSTM-CRF을 이용한 개체명 인식
-
-## 모델링
-
-
 embedding_dim = 128
 char_embedding_dim = 64
 dropout_ratio = 0.3
@@ -667,7 +602,6 @@ output = TimeDistributed(Dense(tag_size, activation="relu"))(output)
 base = Model(inputs=[word_ids, char_ids], outputs=[output])
 model = CRFModel(base, tag_size)
 model.compile(optimizer=tf.keras.optimizers.Adam(0.001), metrics="accuracy")
-
 model.summary()
 
 es = EarlyStopping(monitor="val_loss", mode="min", verbose=1, patience=4)
@@ -711,14 +645,11 @@ plt.title("model loss")
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.legend(["train", "val"], loc="upper left")
-plt.show()
+plt.savefig("images/05-05", dpi=300)
 
 y_predicted = model.predict([X_test, X_char_test])[0]
 pred_tags = sequences_to_tag_for_crf(y_predicted)
 test_tags = sequences_to_tag(y_test)
 
 print(classification_report(test_tags, pred_tags))
-
-## 성능
-
 print("F1-score: {:.1%}".format(f1_score(test_tags, pred_tags)))

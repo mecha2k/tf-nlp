@@ -1,11 +1,3 @@
-import urllib.request
-
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/ukairia777/tensorflow-nlp-tutorial/main/12.%20Sequence%20"
-#     "Labeling/dataset/train.txt",
-#     filename="train.txt",
-# )
-
 import re
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,7 +22,6 @@ for line in f:
     sentence.append([word, splits[-1]])  # 단어와 개체명 태깅만 기록한다.
 
 print("전체 샘플 개수: ", len(tagged_sentences))  # 전체 샘플의 개수 출력
-
 print(tagged_sentences[0])  # 첫번째 샘플 출력
 
 sentences, ner_tags = [], []
@@ -50,10 +41,9 @@ print("샘플의 평균 길이 : %f" % (sum(map(len, sentences)) / len(sentences
 plt.hist([len(s) for s in sentences], bins=50)
 plt.xlabel("length of samples")
 plt.ylabel("number of samples")
-plt.show()
+plt.savefig("images/04-01", dpi=300)
 
 max_words = 4000
-
 src_tokenizer = Tokenizer(num_words=max_words, oov_token="OOV")
 src_tokenizer.fit_on_texts(sentences)
 tar_tokenizer = Tokenizer()
@@ -105,11 +95,9 @@ model = Sequential()
 model.add(Embedding(input_dim=vocab_size, output_dim=128, input_length=max_len, mask_zero=True))
 model.add(Bidirectional(LSTM(256, return_sequences=True)))
 model.add(TimeDistributed(Dense(tag_size, activation="softmax")))
-
 model.compile(loss="categorical_crossentropy", optimizer=Adam(0.001), metrics=["accuracy"])
 
 model.fit(X_train, y_train, batch_size=128, epochs=8, validation_data=(X_test, y_test))
-
 print("\n 테스트 정확도: %.4f" % (model.evaluate(X_test, y_test)[1]))
 
 i = 10  # 확인하고 싶은 테스트용 샘플의 인덱스.
