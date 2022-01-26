@@ -1,18 +1,6 @@
 # 1. BiLSTM을 텍스트 분류에 사용하기
-
 # 케라스에서는 양방향 LSTM을 사용하면서 return_sequences=False를 택할 경우에는 아래의 링크와 같이 동작합니다.
 # https://wikidocs.net/images/page/94748/bilstm3.PNG
-
-# 2. Colab에 Mecab 설치
-
-
-# Commented out IPython magic to ensure Python compatibility.
-# Colab에 Mecab 설치
-# !git clone https://github.com/SOMJANG/Mecab-ko-for-Google-Colab.git
-# %cd Mecab-ko-for-Google-Colab
-# !bash install_mecab-ko_on_colab190912.sh
-
-# 3. 스팀 리뷰 데이터에 대한 이해와 전처리
 
 import pandas as pd
 import numpy as np
@@ -36,21 +24,20 @@ print(total_data["reviews"].nunique(), total_data["label"].nunique())
 
 total_data.drop_duplicates(subset=["reviews"], inplace=True)  # reviews 열에서 중복인 내용이 있다면 중복 제거
 print("총 샘플의 수 :", len(total_data))
-
-print(total_data.isnull().values.any())
+print(total_data.isna().values.any())
 
 train_data, test_data = train_test_split(total_data, test_size=0.25, random_state=42)
 print("훈련용 리뷰의 개수 :", len(train_data))
 print("테스트용 리뷰의 개수 :", len(test_data))
 
 train_data["label"].value_counts().plot(kind="bar")
-
+plt.savefig("images/08-01", dpi=300)
 print(train_data.groupby("label").size().reset_index(name="count"))
 
 # 한글과 공백을 제외하고 모두 제거
 train_data["reviews"] = train_data["reviews"].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "", regex=True)
 train_data["reviews"].replace("", np.nan, inplace=True)
-print(train_data.isnull().sum())
+print(train_data.isna().sum())
 
 test_data.drop_duplicates(subset=["reviews"], inplace=True)  # 중복 제거
 test_data["reviews"] = test_data["reviews"].str.replace(
@@ -67,7 +54,6 @@ if osname == "Windows":
     mecab = Mecab(dicpath="C:/mecab/mecab-ko-dic")
 else:
     mecab = Mecab()
-print(mecab.morphs("와 이런 것도 상품이라고 차라리 내가 만드는 게 나을 뻔"))
 
 stopwords = [
     "도",
@@ -134,7 +120,7 @@ fig.suptitle("Words in texts")
 ax2.set_xlabel("length of samples")
 ax2.set_ylabel("number of samples")
 print("부정 리뷰의 평균 길이 :", np.mean(text_len))
-plt.show()
+plt.savefig("images/08-02", dpi=300)
 
 X_train = train_data["tokenized"].values
 y_train = train_data["label"].values
@@ -175,15 +161,16 @@ X_train = tokenizer.texts_to_sequences(X_train)
 X_test = tokenizer.texts_to_sequences(X_test)
 
 print(X_train[:3])
-
 print(X_test[:3])
 
 print("리뷰의 최대 길이 :", max(len(l) for l in X_train))
 print("리뷰의 평균 길이 :", sum(map(len, X_train)) / len(X_train))
+
+fig = plt.figure(figsize=(10, 6))
 plt.hist([len(s) for s in X_train], bins=50)
 plt.xlabel("length of samples")
 plt.ylabel("number of samples")
-plt.show()
+plt.savefig("images/08-03", dpi=300)
 
 
 def below_threshold_len(max_len, nested_list):
@@ -200,7 +187,6 @@ below_threshold_len(max_len, X_train)
 X_train = pad_sequences(X_train, maxlen=max_len)
 X_test = pad_sequences(X_test, maxlen=max_len)
 
-# 4. BiLSTM으로 스팀 리뷰 감성 분류하기
 
 import re
 
@@ -218,16 +204,15 @@ es = EarlyStopping(monitor="val_loss", mode="min", verbose=1, patience=4)
 mc = ModelCheckpoint(
     "../data/best_model.h5", monitor="val_acc", mode="max", verbose=1, save_best_only=True
 )
-
 model.compile(optimizer="rmsprop", loss="binary_crossentropy", metrics=["acc"])
+model.summary()
+
 history = model.fit(
     X_train, y_train, epochs=15, callbacks=[es, mc], batch_size=256, validation_split=0.2
 )
 
 loaded_model = load_model("../data/best_model.h5")
 print("테스트 정확도: %.4f" % (loaded_model.evaluate(X_test, y_test)[1]))
-
-# 5. 리뷰 예측해보기
 
 
 def sentiment_predict(new_sentence):
@@ -244,9 +229,6 @@ def sentiment_predict(new_sentence):
 
 
 sentiment_predict("노잼 ..완전 재미 없음 ㅉㅉ")
-
 sentiment_predict("유일하게 어벤져스 시리즈중에 엔딩 안본 게임이다. 돈버린 느낌")
-
 sentiment_predict("조금 어렵지만 재밌음ㅋㅋ")
-
 sentiment_predict("케릭터가 예뻐서 좋아요")
