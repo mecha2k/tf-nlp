@@ -13,15 +13,14 @@ print(X_train[0])
 print(y_train[0])
 
 len_result = [len(s) for s in X_train]
-
 print("리뷰의 최대 길이 : {}".format(np.max(len_result)))
 print("리뷰의 평균 길이 : {}".format(np.mean(len_result)))
 
 plt.subplot(1, 2, 1)
 plt.boxplot(len_result)
 plt.subplot(1, 2, 2)
-plt.hist(len_result, bins=50)
-plt.show()
+plt.hist(x=len_result, bins=50)
+plt.savefig("images/04-01", dpi=300)
 
 unique_elements, counts_elements = np.unique(y_train, return_counts=True)
 print("각 레이블에 대한 빈도수:")
@@ -31,17 +30,13 @@ word_to_index = imdb.get_word_index()
 index_to_word = {}
 for key, value in word_to_index.items():
     index_to_word[value + 3] = key
-
 print("빈도수 상위 1등 단어 : {}".format(index_to_word[4]))
-
 print("빈도수 상위 3938등 단어 : {}".format(index_to_word[3941]))
 
 for index, token in enumerate(("<pad>", "<sos>", "<unk>")):
     index_to_word[index] = token
-
 print(" ".join([index_to_word[index] for index in X_train[0]]))
 
-# 2. GRU로 IMDB 리뷰 감성 분류하기
 
 import re
 from tensorflow.keras.datasets import imdb
@@ -75,6 +70,7 @@ model.compile(optimizer="rmsprop", loss="binary_crossentropy", metrics=["acc"])
 history = model.fit(
     X_train, y_train, epochs=15, callbacks=[es, mc], batch_size=64, validation_split=0.2
 )
+model.summary()
 
 loaded_model = load_model("../data/GRU_model.h5")
 print("\n 테스트 정확도: %.4f" % (loaded_model.evaluate(X_test, y_test)[1]))
@@ -113,7 +109,6 @@ test_input = (
     "too hard to be funny. The story was really dumb as well. Don't watch this movie if you are going "
     "because others say its great unless you are a Black Panther fan or Marvels fan."
 )
-
 sentiment_predict(test_input)
 
 test_input = (
@@ -125,5 +120,4 @@ test_input = (
     "amazingly detailed and laced with sharp wit a humor. The special effects are literally mind-blowing and "
     "the action scenes are both hard-hitting and beautifully choreographed."
 )
-
 sentiment_predict(test_input)
