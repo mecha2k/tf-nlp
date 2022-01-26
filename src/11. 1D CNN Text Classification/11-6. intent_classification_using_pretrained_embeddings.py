@@ -45,6 +45,7 @@ print(intent_train[10000:10002])
 print(label_train[10000:10002])
 
 train_data["label"].value_counts().plot(kind="bar")
+plt.savefig("images/06-01", dpi=300)
 
 # 레이블 인코딩. 레이블에 고유한 정수를 부여
 idx_encode = preprocessing.LabelEncoder()
@@ -73,10 +74,13 @@ print("단어 집합(Vocabulary)의 크기 :", vocab_size)
 
 print("문장의 최대 길이 :", max(len(l) for l in sequences))
 print("문장의 평균 길이 :", sum(map(len, sequences)) / len(sequences))
-plt.hist([len(s) for s in sequences], bins=50)
+
+fig = plt.figure(figsize=(10, 6))
+plt.hist(x=[len(s) for s in sequences], bins=50)
 plt.xlabel("length of samples")
 plt.ylabel("number of samples")
-plt.savefig("images/06-01", dpi=300)
+plt.savefig("images/06-02", dpi=300)
+
 
 max_len = 35
 intent_train = pad_sequences(sequences, maxlen=max_len)
@@ -187,7 +191,7 @@ plt.title("model accuracy")
 plt.ylabel("accuracy")
 plt.xlabel("epochs")
 plt.legend(["train", "test"], loc="lower right")
-plt.savefig("images/05-02", dpi=300)
+plt.savefig("images/06-03", dpi=300)
 
 X_test = tokenizer.texts_to_sequences(X_test)
 X_test = pad_sequences(X_test, maxlen=max_len)
