@@ -1,17 +1,3 @@
-# 1. Colab에 Mecab 설치
-
-# 아래의 Mecab 설치는 Colab에서 실행한다고 가정하고 작성되었습니다.
-# 다른 환경이라면 별도의 Mecab 설치 과정을 거치거나 Okt 등과 같은 다른 형태소 분석기를 사용해주세요.
-
-
-# Commented out IPython magic to ensure Python compatibility.
-# Colab에 Mecab 설치
-# !git clone https://github.com/SOMJANG/Mecab-ko-for-Google-Colab.git
-# %cd Mecab-ko-for-Google-Colab
-# !bash install_mecab-ko_on_colab190912.sh
-
-# 2. 네이버 쇼핑 리뷰 데이터에 대한 이해와 전처리
-
 from konlpy.tag import Mecab
 
 import re
@@ -19,11 +5,22 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import urllib.request
+import platform
 
 from wordcloud import WordCloud
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from collections import Counter
+
+osname = platform.system()
+if osname == "Windows":
+    mecab = Mecab(dicpath="C:/mecab/mecab-ko-dic")
+else:
+    mecab = Mecab()
+
+print(mecab.morphs("와 이런 것도 상품이라고 차라리 내가 만드는 게 나을 뻔"))
+
 
 # urllib.request.urlretrieve(
 #     "https://raw.githubusercontent.com/bab2min/corpus/master/sentiment/naver_shopping.txt",
@@ -67,16 +64,6 @@ test_data["reviews"].replace("", np.nan, inplace=True)  # 공백은 Null 값으�
 test_data = test_data.dropna(how="any")  # Null 값 제거
 print("전처리 후 테스트용 샘플의 개수 :", len(test_data))
 
-import platform
-
-osname = platform.system()
-if osname == "Windows":
-    mecab = Mecab(dicpath="C:/mecab/mecab-ko-dic")
-else:
-    mecab = Mecab()
-
-print(mecab.morphs("와 이런 것도 상품이라고 차라리 내가 만드는 게 나을 뻔"))
-
 stopwords = [
     "도",
     "는",
@@ -107,9 +94,6 @@ train_data["tokenized"] = train_data["reviews"].apply(mecab.morphs)
 train_data["tokenized"] = train_data["tokenized"].apply(
     lambda x: [item for item in x if item not in stopwords]
 )
-
-from collections import Counter
-
 print(train_data[train_data.label == 0]["tokenized"].values)
 
 negative_words = np.hstack(train_data[train_data.label == 0]["tokenized"].values)
@@ -117,34 +101,28 @@ positive_words = np.hstack(train_data[train_data.label == 1]["tokenized"].values
 
 negative_word_count = Counter(negative_words)  # 파이썬의 Counter 모듈을 이용하면 단어의 모든 빈도를 쉽게 계산할 수 있습니다.
 print(negative_word_count)
-
-negative_word_count.most_common(20)
-
 print(negative_word_count.most_common(20))
 
 positive_word_count = Counter(positive_words)  # 파이썬의 Counter 모듈을 이용하면 단어의 모든 빈도를 쉽게 계산할 수 있습니다.
 print(positive_word_count)
-
-positive_word_count.most_common(20)
-
 print(positive_word_count.most_common(20))
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 text_len = train_data[train_data["label"] == 1]["tokenized"].map(lambda x: len(x))
-ax1.hist(text_len, color="red")
+ax1.hist(x=text_len, color="red")
 ax1.set_title("Positive Reviews")
 ax1.set_xlabel("length of samples")
 ax1.set_ylabel("number of samples")
 print("긍정 리뷰의 평균 길이 :", np.mean(text_len))
 
 text_len = train_data[train_data["label"] == 0]["tokenized"].map(lambda x: len(x))
-ax2.hist(text_len, color="blue")
+ax2.hist(x=text_len, color="blue")
 ax2.set_title("Negative Reviews")
 fig.suptitle("Words in texts")
 ax2.set_xlabel("length of samples")
 ax2.set_ylabel("number of samples")
 print("부정 리뷰의 평균 길이 :", np.mean(text_len))
-plt.show()
+plt.savefig("images/07-01", dpi=300)
 
 test_data["tokenized"] = test_data["reviews"].apply(mecab.morphs)
 test_data["tokenized"] = test_data["tokenized"].apply(
@@ -161,7 +139,6 @@ print(y_train[:3])
 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(X_train)
-
 print(tokenizer.word_index)
 
 threshold = 2
@@ -195,17 +172,17 @@ X_train = tokenizer.texts_to_sequences(X_train)
 X_test = tokenizer.texts_to_sequences(X_test)
 
 print(tokenizer.word_index)
-
 print(X_train[:3])
-
 print(X_test[:3])
 
 print("리뷰의 최대 길이 :", max(len(l) for l in X_train))
 print("리뷰의 평균 길이 :", sum(map(len, X_train)) / len(X_train))
-plt.hist([len(s) for s in X_train], bins=50)
+
+fig = plt.figure(figsize=(10, 6))
+plt.hist(x=[len(s) for s in X_train], bins=50)
 plt.xlabel("length of samples")
 plt.ylabel("number of samples")
-plt.show()
+plt.savefig("images/07-02", dpi=300)
 
 
 def below_threshold_len(max_len, nested_list):
@@ -221,11 +198,9 @@ below_threshold_len(max_len, X_train)
 
 X_train = pad_sequences(X_train, maxlen=max_len)
 X_test = pad_sequences(X_test, maxlen=max_len)
-
 print(X_train.shape)
 print(X_train[:3])
 
-# 3. GRU를 이용한 분류
 
 from tensorflow.keras.layers import Embedding, Dense, GRU
 from tensorflow.keras.models import Sequential
@@ -246,11 +221,10 @@ model.compile(optimizer="rmsprop", loss="binary_crossentropy", metrics=["acc"])
 history = model.fit(
     X_train, y_train, epochs=15, callbacks=[es, mc], batch_size=60, validation_split=0.2
 )
+model.summary()
 
 loaded_model = load_model("../data/best_model.h5")
 print("\n 테스트 정확도: %.4f" % (loaded_model.evaluate(X_test, y_test)[1]))
-
-# 4. 리뷰 예측해보기
 
 
 def sentiment_predict(new_sentence):
@@ -268,27 +242,17 @@ def sentiment_predict(new_sentence):
 
 
 sentiment_predict("이 상품 진짜 좋아요... 저는 강추합니다. 대박")
-
 sentiment_predict("진짜 배송도 늦고 개짜증나네요. 뭐 이런 걸 상품이라고 만듬?")
-
 sentiment_predict("판매자님... 너무 짱이에요.. 대박나삼")
-
 sentiment_predict("ㅁㄴㅇㄻㄴㅇㄻㄴㅇ리뷰쓰기도 귀찮아")
 
 epochs = range(1, len(history.history["acc"]) + 1)
+
+fig = plt.figure(figsize=(10, 6))
 plt.plot(epochs, history.history["loss"])
 plt.plot(epochs, history.history["val_loss"])
 plt.title("model loss")
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.legend(["train", "test"], loc="upper left")
-plt.show()
-
-epochs = range(1, len(history.history["acc"]) + 1)
-plt.plot(epochs, history.history["acc"])
-plt.plot(epochs, history.history["val_acc"])
-plt.title("model acc")
-plt.ylabel("acc")
-plt.xlabel("epoch")
-plt.legend(["train", "test"], loc="upper left")
-plt.show()
+plt.savefig("images/07-02", dpi=300)
