@@ -183,7 +183,6 @@ decoder_outputs = decoder_dense(decoder_outputs)
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
 model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["acc"])
-
 model.summary()
 
 model.fit(

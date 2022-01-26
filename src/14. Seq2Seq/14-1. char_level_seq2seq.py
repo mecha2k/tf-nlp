@@ -24,10 +24,10 @@ print("전체 샘플의 개수 :", len(lines))
 
 lines = lines.loc[:, "src":"tar"]
 lines = lines[0:60000]  # 6만개만 저장
-lines.sample(10)
+print(lines.sample(10))
 
 lines.tar = lines.tar.apply(lambda x: "\t " + x + " \n")
-lines.sample(10)
+print(lines.sample(10))
 
 # 글자 집합 구축
 src_vocab = set()
@@ -133,7 +133,6 @@ model.fit(
 )
 
 encoder_model = Model(inputs=encoder_inputs, outputs=encoder_states)
-
 encoder_model.summary()
 
 # 이전 시점의 상태들을 저장하는 텐서

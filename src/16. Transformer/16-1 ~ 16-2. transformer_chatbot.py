@@ -550,9 +550,7 @@ model = transformer(
 )
 
 MAX_LENGTH = 40
-
 learning_rate = CustomSchedule(D_MODEL)
-
 optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98, epsilon=1e-9)
 
 
@@ -571,23 +569,18 @@ model.fit(dataset, epochs=EPOCHS)
 
 def evaluate(sentence):
     sentence = preprocess_sentence(sentence)
-
     sentence = tf.expand_dims(START_TOKEN + tokenizer.encode(sentence) + END_TOKEN, axis=0)
-
     output = tf.expand_dims(START_TOKEN, 0)
 
     # 디코더의 예측 시작
     for i in range(MAX_LENGTH):
         predictions = model(inputs=[sentence, output], training=False)
-
         # 현재(마지막) 시점의 예측 단어를 받아온다.
         predictions = predictions[:, -1:, :]
         predicted_id = tf.cast(tf.argmax(predictions, axis=-1), tf.int32)
-
         # 만약 마지막 시점의 예측 단어가 종료 토큰이라면 예측을 중단
         if tf.equal(predicted_id, END_TOKEN[0]):
             break
-
         # 마지막 시점의 예측 단어를 출력에 연결한다.
         # 이는 for문을 통해서 디코더의 입력으로 사용될 예정이다.
         output = tf.concat([output, predicted_id], axis=-1)
@@ -597,12 +590,9 @@ def evaluate(sentence):
 
 def predict(sentence):
     prediction = evaluate(sentence)
-
     predicted_sentence = tokenizer.decode([i for i in prediction if i < tokenizer.vocab_size])
-
     print("Input: {}".format(sentence))
     print("Output: {}".format(predicted_sentence))
-
     return predicted_sentence
 
 
@@ -613,13 +603,8 @@ def preprocess_sentence(sentence):
 
 
 output = predict("영화 볼래?")
-
 output = predict("고민이 있어")
-
 output = predict("너무 화가나")
-
 output = predict("게임하고싶은데 할래?")
-
 output = predict("나 너 좋아하는 것 같아")
-
 output = predict("딥 러닝 자연어 처리를 잘 하고 싶어")

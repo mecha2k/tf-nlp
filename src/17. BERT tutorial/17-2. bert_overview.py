@@ -1,5 +1,3 @@
-# pip install transformers
-
 import pandas as pd
 from transformers import BertTokenizer
 
