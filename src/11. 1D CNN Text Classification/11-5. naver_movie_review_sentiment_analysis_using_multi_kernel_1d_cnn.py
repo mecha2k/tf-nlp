@@ -1,7 +1,4 @@
 import tensorflow as tf
-
-# 1. 네이버 영화 데이터 수집 & 전처리
-
 import pandas as pd
 import urllib.request
 import matplotlib.pyplot as plt
@@ -12,8 +9,14 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 import numpy as np
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-# urllib.request.urlretrieve("https://raw.githubusercontent.com/e9t/nsmc/master/ratings_train.txt", filename="ratings_train.txt")
-# urllib.request.urlretrieve("https://raw.githubusercontent.com/e9t/nsmc/master/ratings_test.txt", filename="ratings_test.txt")
+# urllib.request.urlretrieve(
+#     "https://raw.githubusercontent.com/e9t/nsmc/master/ratings_train.txt",
+#     filename="../data/ratings_train.txt",
+# )
+# urllib.request.urlretrieve(
+#     "https://raw.githubusercontent.com/e9t/nsmc/master/ratings_test.txt",
+#     filename="../data/ratings_test.txt",
+# )
 
 train_data = pd.read_table("../data/ratings_train.txt")
 test_data = pd.read_table("../data/ratings_test.txt")
@@ -24,22 +27,16 @@ print(train_data[:5])  # 상위 5개 출력
 print(train_data["document"].nunique(), train_data["label"].nunique())
 
 train_data.drop_duplicates(subset=["document"], inplace=True)  # document 열에서 중복인 내용이 있다면 중복 제거
-
 print("총 샘플의 수 :", len(train_data))
 
 train_data["label"].value_counts().plot(kind="bar")
-
 print(train_data.groupby("label").size().reset_index(name="count"))
-
 print(train_data.isnull().values.any())
-
 print(train_data.isnull().sum())
-
 print(train_data.loc[train_data.document.isnull()])
 
 train_data = train_data.dropna(how="any")  # Null 값이 존재하는 행 제거
 print(train_data.isnull().values.any())  # Null 값이 존재하는지 확인
-
 print(len(train_data))
 
 train_data["document"] = train_data["document"].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "", regex=True)
@@ -50,20 +47,19 @@ print(train_data[:5])
 train_data["document"] = train_data["document"].str.replace("^ +", "", regex=True)
 train_data["document"].replace("", np.nan, inplace=True)
 print(train_data.isnull().sum())
-
 print(train_data.loc[train_data.document.isnull()][:5])
 
 train_data = train_data.dropna(how="any")
-
 print(len(train_data))
 
 test_data.drop_duplicates(subset=["document"], inplace=True)  # document 열에서 중복인 내용이 있다면 중복 제거
-test_data["document"] = test_data["document"].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "", regex=True)
+test_data["document"] = test_data["document"].str.replace(
+    "[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "", regex=True
+)  # 정규 표현식 수행
 test_data["document"] = test_data["document"].str.replace("^ +", "", regex=True)  # 공백은 empty 값으로 변경
 test_data["document"].replace("", np.nan, inplace=True)  # 공백은 Null 값으로 변경
 test_data = test_data.dropna(how="any")  # Null 값 제거
 print("전처리 후 테스트용 샘플의 개수 :", len(test_data))
-
 print("전처리 후 테스트용 샘플의 개수 :", len(test_data))
 
 stopwords = [
@@ -104,14 +100,11 @@ for sentence in tqdm(test_data["document"]):
         word for word in tokenized_sentence if not word in stopwords
     ]  # 불용어 제거
     X_test.append(stopwords_removed_sentence)
-
 print("전처리 후 테스트용 샘플의 개수 :", len(X_test))
 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(X_train)
-
 print(tokenizer.word_index)
-
 print(tokenizer.word_counts.items())
 
 threshold = 3
@@ -147,15 +140,12 @@ y_test = np.array(test_data["label"])
 
 print(len(X_train))
 print(len(y_train))
-
 print(X_train[:3])
 
 drop_train = [index for index, sentence in enumerate(X_train) if len(sentence) < 1]
 drop_test = [index for index, sentence in enumerate(X_test) if len(sentence) < 1]
-
 print(drop_train)
-
-len(drop_train)
+print(len(drop_train))
 
 X_train = np.delete(X_train, drop_train, axis=0)
 y_train = np.delete(y_train, drop_train, axis=0)
@@ -167,7 +157,6 @@ print(len(X_test))
 print(len(y_test))
 
 X_test = np.delete(X_test, drop_test, axis=0)
-
 y_test = np.delete(y_test, drop_test, axis=0)
 
 print(len(X_test))
@@ -175,10 +164,10 @@ print(len(y_test))
 
 print("리뷰의 최대 길이 :", max(len(l) for l in X_train))
 print("리뷰의 평균 길이 :", sum(map(len, X_train)) / len(X_train))
-plt.hist([len(s) for s in X_train], bins=50)
+plt.hist(x=[len(s) for s in X_train], bins=50)
 plt.xlabel("length of samples")
 plt.ylabel("number of samples")
-plt.show()
+plt.savefig("images/05-01", dpi=300)
 
 
 def below_threshold_len(max_len, nested_list):
@@ -196,7 +185,6 @@ below_threshold_len(max_len, X_train)
 X_train = pad_sequences(X_train, maxlen=max_len)
 X_test = pad_sequences(X_test, maxlen=max_len)
 
-# 2. Multi-Kernel 1D CNN으로 네이버 영화 리뷰 분류하기
 
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import (
@@ -240,17 +228,15 @@ model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["acc"])
 
 es = EarlyStopping(monitor="val_loss", mode="min", verbose=1, patience=4)
 mc = ModelCheckpoint(
-    "../data/CNN_model.h5", monitor="val_acc", mode="max", verbose=1, save_best_only=True
+    "../data/11_CNN_model.h5", monitor="val_acc", mode="max", verbose=1, save_best_only=True
 )
 
 model.fit(
     X_train, y_train, batch_size=64, epochs=10, validation_split=0.2, verbose=2, callbacks=[es, mc]
 )
 
-loaded_model = load_model("../data/CNN_model.h5")
+loaded_model = load_model("../data/11_CNN_model.h5")
 print("\n 테스트 정확도: %.4f" % (loaded_model.evaluate(X_test, y_test)[1]))
-
-# 3. 리뷰 예측해보기
 
 
 def sentiment_predict(new_sentence):
@@ -267,11 +253,7 @@ def sentiment_predict(new_sentence):
 
 
 sentiment_predict("이 영화 개꿀잼 ㅋㅋㅋ")
-
 sentiment_predict("이 영화 핵노잼 ㅠㅠ")
-
 sentiment_predict("이딴게 영화냐 ㅉㅉ")
-
 sentiment_predict("감독 뭐하는 놈이냐?")
-
 sentiment_predict("와 개쩐다 정말 세계관 최강자들의 영화다")

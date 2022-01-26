@@ -1,7 +1,4 @@
 import tensorflow as tf
-
-"""# 1. 데이터 로드와 전처리"""
-
 import os
 import pandas as pd
 import numpy as np
@@ -16,7 +13,6 @@ from sklearn.metrics import classification_report
 
 train_data = pd.read_csv("../data/intent_train_data.csv")
 test_data = pd.read_csv("../data/intent_test_data.csv")
-
 print(train_data)
 print(test_data)
 
@@ -80,7 +76,7 @@ print("문장의 평균 길이 :", sum(map(len, sequences)) / len(sequences))
 plt.hist([len(s) for s in sequences], bins=50)
 plt.xlabel("length of samples")
 plt.ylabel("number of samples")
-plt.show()
+plt.savefig("images/06-01", dpi=300)
 
 max_len = 35
 intent_train = pad_sequences(sequences, maxlen=max_len)
@@ -115,13 +111,8 @@ print("검증 데이터 레이블의 크기(shape):", y_val.shape)
 print("테스트 데이터의 개수 :", len(X_test))
 print("테스트 데이터 레이블의 개수 :", len(y_test))
 
-"""# 2. 사전 훈련된 워드 임베딩 사용하기
-
-윈도우 환경을 사용하시는 분들은 http://nlp.stanford.edu/data/glove.6B.zip 링크에 가셔서 직접 다운로드하시고 압축푸시면 됩니다.
-"""
-
-# !wget http://nlp.stanford.edu/data/glove.6B.zip
-# !unzip glove*.zip
+# 2. 사전 훈련된 워드 임베딩 사용하기
+# 윈도우 환경을 사용하시는 분들은 http://nlp.stanford.edu/data/glove.6B.zip 링크에 가셔서 직접 다운로드하시고 압축푸시면 됩니다.
 
 embedding_dict = dict()
 f = open(os.path.join("../data/glove.6B/glove.6B.100d.txt"), encoding="utf-8")
@@ -135,7 +126,6 @@ for line in f:
 f.close()
 
 print("%s개의 Embedding vector가 있습니다." % len(embedding_dict))
-
 print(embedding_dict["respectable"])
 print(len(embedding_dict["respectable"]))
 
@@ -148,8 +138,7 @@ for word, i in word_index.items():
     if embedding_vector is not None:
         embedding_matrix[i] = embedding_vector
 
-"""# 3. 1D CNN을 이용한 의도 분류"""
-
+# 3. 1D CNN을 이용한 의도 분류
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
     Embedding,
@@ -185,13 +174,12 @@ output = Dropout(dropout_ratio)(output)
 model_output = Dense(len(label_idx), activation="softmax")(output)
 
 model = Model(model_input, model_output)
-
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["acc"])
-
 model.summary()
 
 history = model.fit(X_train, y_train, batch_size=64, epochs=10, validation_data=(X_val, y_val))
 
+fig = plt.figure(figsize=(10, 6))
 epochs = range(1, len(history.history["acc"]) + 1)
 plt.plot(epochs, history.history["acc"])
 plt.plot(epochs, history.history["val_acc"])
@@ -199,16 +187,7 @@ plt.title("model accuracy")
 plt.ylabel("accuracy")
 plt.xlabel("epochs")
 plt.legend(["train", "test"], loc="lower right")
-plt.show()
-
-epochs = range(1, len(history.history["loss"]) + 1)
-plt.plot(epochs, history.history["loss"])
-plt.plot(epochs, history.history["val_loss"])
-plt.title("model loss")
-plt.ylabel("loss")
-plt.xlabel("epochs")
-plt.legend(["train", "test"], loc="upper right")
-plt.show()
+plt.savefig("images/05-02", dpi=300)
 
 X_test = tokenizer.texts_to_sequences(X_test)
 X_test = pad_sequences(X_test, maxlen=max_len)
