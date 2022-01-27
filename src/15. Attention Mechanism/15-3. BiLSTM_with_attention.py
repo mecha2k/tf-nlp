@@ -27,7 +27,7 @@ class BahdanauAttention(tf.keras.Model):
         self.W2 = Dense(units)
         self.V = Dense(1)
 
-    def call(self, values, query):  # 단, key와 value는 같음
+    def __call__(self, values, query):  # 단, key와 value는 같음
         # query shape == (batch_size, hidden size)
         # hidden_with_time_axis shape == (batch_size, 1, hidden size)
         # score 계산을 위해 뒤에서 할 덧셈을 위해서 차원을 변경해줍니다.
@@ -62,14 +62,13 @@ print(lstm.shape, forward_h.shape, forward_c.shape, backward_h.shape, backward_c
 state_h = Concatenate()([forward_h, backward_h])  # 은닉 상태
 state_c = Concatenate()([forward_c, backward_c])  # 셀 상태
 
-attention = BahdanauAttention(64)  # 가중치 크기 정의
-context_vector, attention_weights = attention(lstm, state_h)
+context_vector, attention_weights = BahdanauAttention(64)(lstm, state_h)
 
 dense1 = Dense(20, activation="relu")(context_vector)
 dropout = Dropout(0.5)(dense1)
 output = Dense(1, activation="sigmoid")(dropout)
-model = Model(inputs=sequence_input, outputs=output)
 
+model = Model(inputs=sequence_input, outputs=output)
 model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
 
 history = model.fit(
