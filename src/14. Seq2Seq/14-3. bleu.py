@@ -88,7 +88,9 @@ def brevity_penalty(candidate, reference_list):
         return np.exp(1 - ref_len / ca_len)
 
 
-def bleu_score(candidate, reference_list, weights=[0.25, 0.25, 0.25, 0.25]):
+def bleu_score(candidate, reference_list, weights=None):
+    if weights is None:
+        weights = [0.25, 0.25, 0.25, 0.25]
     bp = brevity_penalty(candidate, reference_list)  # 브레버티 패널티, BP
 
     p_n = [
