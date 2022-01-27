@@ -1,15 +1,8 @@
-# 챗봇의 성능이 아쉽다면 모델의 크기를 조정해보세요.
-
-# 링크 :
-# https://wikidocs.net/31379
-# https://wikidocs.net/89786
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-# 최종 버전
+
 class PositionalEncoding(tf.keras.layers.Layer):
     def __init__(self, position, d_model):
         super(PositionalEncoding, self).__init__()
@@ -42,7 +35,7 @@ class PositionalEncoding(tf.keras.layers.Layer):
         print(pos_encoding.shape)
         return tf.cast(pos_encoding, tf.float32)
 
-    def call(self, inputs):
+    def __call__(self, inputs):
         return inputs + self.pos_encoding[:, : tf.shape(inputs)[1], :]
 
 
@@ -53,7 +46,7 @@ plt.xlabel("Depth")
 plt.xlim((0, 128))
 plt.ylabel("Position")
 plt.colorbar()
-plt.show()
+plt.savefig("01-01", dpi=300)
 
 
 def scaled_dot_product_attention(query, key, value, mask):
@@ -110,7 +103,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         inputs = tf.reshape(inputs, shape=(batch_size, -1, self.num_heads, self.depth))
         return tf.transpose(inputs, perm=[0, 2, 1, 3])
 
-    def call(self, inputs):
+    def __call__(self, inputs):
         query, key, value, mask = inputs["query"], inputs["key"], inputs["value"], inputs["mask"]
         batch_size = tf.shape(query)[0]
 
