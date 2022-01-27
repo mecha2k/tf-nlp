@@ -191,6 +191,7 @@ model.fit(
     validation_data=([encoder_input_test, decoder_input_test], decoder_target_test),
     batch_size=128,
     epochs=50,
+    verbose=1,
 )
 
 # 인코더
