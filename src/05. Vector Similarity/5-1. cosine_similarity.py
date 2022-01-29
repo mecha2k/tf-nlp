@@ -41,12 +41,12 @@ idx = title_to_index["Father of the Bride Part II"]
 print(idx)
 
 
-def get_recommendations(title, cosine_sim=cosine_sim):
-    idx = title_to_index[title]
-    sim_scores = list(enumerate(cosine_sim[idx]))
+def get_recommendations(title, cos_sim_=cosine_sim):
+    idx_ = title_to_index[title]
+    sim_scores = list(enumerate(cos_sim_[idx_]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     sim_scores = sim_scores[1:11]
-    movie_indices = [idx[0] for idx in sim_scores]
+    movie_indices = [id_[0] for id_ in sim_scores]
     return data["title"].iloc[movie_indices]
 
 
