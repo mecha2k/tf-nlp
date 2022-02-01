@@ -1,12 +1,8 @@
 import tensorflow as tf
-import os
-
 from tensorflow.keras.datasets import imdb
-from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.layers import Dense, Embedding, Bidirectional, LSTM, Concatenate, Dropout
 from tensorflow.keras import Input, Model
-from tensorflow.keras import optimizers
 
 
 vocab_size = 10000
@@ -39,13 +35,13 @@ class BahdanauAttention(tf.keras.Model):
         score = self.V(tf.nn.tanh(self.W1(values) + self.W2(hidden_with_time_axis)))
 
         # attention_weights shape == (batch_size, max_length, 1)
-        attention_weights = tf.nn.softmax(score, axis=1)
+        attention_weights_ = tf.nn.softmax(score, axis=1)
 
         # context_vector shape after sum == (batch_size, hidden_size)
-        context_vector = attention_weights * values
-        context_vector = tf.reduce_sum(context_vector, axis=1)
+        context_vector_ = attention_weights_ * values
+        context_vector_ = tf.reduce_sum(context_vector_, axis=1)
 
-        return context_vector, attention_weights
+        return context_vector_, attention_weights_
 
 
 sequence_input = Input(shape=(max_len,), dtype="int32")
