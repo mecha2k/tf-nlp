@@ -20,6 +20,6 @@ from transformers import FillMaskPipeline
 
 pip = FillMaskPipeline(model=model, tokenizer=tokenizer)
 
-pip("축구는 정말 재미있는 [MASK]다.")
-pip("어벤져스는 정말 재미있는 [MASK]다.")
-pip("나는 오늘 아침에 [MASK]에 출근을 했다.")
+print(pip("축구는 정말 재미있는 [MASK]다."))
+print(pip("어벤져스는 정말 재미있는 [MASK]다."))
+print(pip("나는 오늘 아침에 [MASK]에 출근을 했다."))

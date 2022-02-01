@@ -198,15 +198,17 @@ ic("test loss, test acc: ", results)
 
 
 def sentiment_predict(new_sentence):
-    input_id = tokenizer.encode(new_sentence, max_length=max_seq_len, padding=True, truncation=True)
+    input_id_ = tokenizer.encode(
+        new_sentence, max_length=max_seq_len, padding=True, truncation=True
+    )
 
-    padding_count = input_id.count(tokenizer.pad_token_id)
-    attention_mask = [1] * (max_seq_len - padding_count) + [0] * padding_count
-    token_type_id = [0] * max_seq_len
+    padding_count = input_id_.count(tokenizer.pad_token_id)
+    attention_mask_ = [1] * (max_seq_len - padding_count) + [0] * padding_count
+    token_type_id_ = [0] * max_seq_len
 
-    input_ids = np.array([input_id])
-    attention_masks = np.array([attention_mask])
-    token_type_ids = np.array([token_type_id])
+    input_ids = np.array([input_id_])
+    attention_masks = np.array([attention_mask_])
+    token_type_ids = np.array([token_type_id_])
 
     encoded_input = [input_ids, attention_masks, token_type_ids]
     score = model.predict(encoded_input)[0][0]
