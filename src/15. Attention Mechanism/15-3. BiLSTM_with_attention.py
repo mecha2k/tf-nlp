@@ -45,9 +45,9 @@ class BahdanauAttention(tf.keras.Model):
 
 
 sequence_input = Input(shape=(max_len,), dtype="int32")
-embedded_sequences = Embedding(vocab_size, 128, input_length=max_len, mask_zero=True)(
-    sequence_input
-)
+embedded_sequences = Embedding(
+    input_dim=vocab_size, output_dim=128, input_length=max_len, mask_zero=True
+)(sequence_input)
 lstm = Bidirectional(LSTM(64, dropout=0.5, return_sequences=True))(embedded_sequences)
 lstm, forward_h, forward_c, backward_h, backward_c = Bidirectional(
     LSTM(64, dropout=0.5, return_sequences=True, return_state=True)
