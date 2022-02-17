@@ -18,16 +18,16 @@ X_test = pad_sequences(X_test, maxlen=max_len)
 
 class BahdanauAttention(tf.keras.Model):
     def __init__(self, units):
-        super(BahdanauAttention, self).__init__()
-        self.W1 = Dense(units)
-        self.W2 = Dense(units)
-        self.V = Dense(1)
+        super().__init__()
+        self.W1 = Dense(units=units)
+        self.W2 = Dense(units=units)
+        self.V = Dense(units=1)
 
     def __call__(self, values, query):  # 단, key와 value는 같음
         # query shape == (batch_size, hidden size)
         # hidden_with_time_axis shape == (batch_size, 1, hidden size)
         # score 계산을 위해 뒤에서 할 덧셈을 위해서 차원을 변경해줍니다.
-        hidden_with_time_axis = tf.expand_dims(query, 1)
+        hidden_with_time_axis = tf.expand_dims(input=query, axis=1)
 
         # score shape == (batch_size, max_length, 1)
         # we get 1 at the last axis because we are applying score to self.V
@@ -48,9 +48,9 @@ sequence_input = Input(shape=(max_len,), dtype="int32")
 embedded_sequences = Embedding(
     input_dim=vocab_size, output_dim=128, input_length=max_len, mask_zero=True
 )(sequence_input)
-lstm = Bidirectional(LSTM(64, dropout=0.5, return_sequences=True))(embedded_sequences)
+lstm = Bidirectional(LSTM(units=64, dropout=0.5, return_sequences=True))(embedded_sequences)
 lstm, forward_h, forward_c, backward_h, backward_c = Bidirectional(
-    LSTM(64, dropout=0.5, return_sequences=True, return_state=True)
+    LSTM(units=64, dropout=0.5, return_sequences=True, return_state=True)
 )(lstm)
 
 print(lstm.shape, forward_h.shape, forward_c.shape, backward_h.shape, backward_c.shape)
@@ -58,7 +58,7 @@ print(lstm.shape, forward_h.shape, forward_c.shape, backward_h.shape, backward_c
 state_h = Concatenate()([forward_h, backward_h])  # 은닉 상태
 state_c = Concatenate()([forward_c, backward_c])  # 셀 상태
 
-context_vector, attention_weights = BahdanauAttention(64)(lstm, state_h)
+context_vector, attention_weights = BahdanauAttention(units=64)(lstm, state_h)
 
 dense1 = Dense(20, activation="relu")(context_vector)
 dropout = Dropout(0.5)(dense1)
@@ -68,7 +68,7 @@ model = Model(inputs=sequence_input, outputs=output)
 model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
 
 history = model.fit(
-    X_train, y_train, epochs=3, batch_size=256, validation_data=(X_test, y_test), verbose=1
+    x=X_train, y=y_train, epochs=3, batch_size=256, validation_data=(X_test, y_test), verbose=1
 )
 
 print("\n 테스트 정확도: %.4f" % (model.evaluate(X_test, y_test)[1]))
