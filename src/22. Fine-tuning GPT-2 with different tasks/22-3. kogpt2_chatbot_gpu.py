@@ -17,7 +17,7 @@ print(tokenizer.decode(3))
 print(tokenizer.decode(4))
 
 import pandas as pd
-import tqdm
+from tqdm import tqdm
 import urllib.request
 
 # urllib.request.urlretrieve(
@@ -67,7 +67,7 @@ EPOCHS = 3
 for epoch in range(EPOCHS):
     epoch_loss = 0
 
-    for batch in tqdm.tqdm_notebook(dataset, total=steps):
+    for batch in tqdm(dataset, total=steps):
         with tf.GradientTape() as tape:
             result = model(batch, labels=batch)
             loss = result[0]
@@ -108,12 +108,12 @@ def return_answer_by_chatbot(user_text):
     return chatbot_response
 
 
-return_answer_by_chatbot("안녕! 반가워~")
-return_answer_by_chatbot("너는 누구야?")
-return_answer_by_chatbot("사랑해")
-return_answer_by_chatbot("나랑 영화보자")
-return_answer_by_chatbot("너무 심심한데 나랑 놀자")
-return_answer_by_chatbot("영화 해리포터 재밌어?")
-return_answer_by_chatbot("너 딥 러닝 잘해?")
-return_answer_by_chatbot("너 취했어?")
-return_answer_by_chatbot("커피 한 잔 할까?")
+print(return_answer_by_chatbot("안녕! 반가워~"))
+print(return_answer_by_chatbot("너는 누구야?"))
+print(return_answer_by_chatbot("사랑해"))
+print(return_answer_by_chatbot("나랑 영화보자"))
+print(return_answer_by_chatbot("너무 심심한데 나랑 놀자"))
+print(return_answer_by_chatbot("영화 해리포터 재밌어?"))
+print(return_answer_by_chatbot("너 딥 러닝 잘해?"))
+print(return_answer_by_chatbot("너 취했어?"))
+print(return_answer_by_chatbot("커피 한 잔 할까?"))

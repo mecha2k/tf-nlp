@@ -1,5 +1,6 @@
 from transformers import TFBertForMaskedLM
 from transformers import AutoTokenizer
+from icecream import ic
 
 model = TFBertForMaskedLM.from_pretrained("bert-large-uncased")
 tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
@@ -18,6 +19,6 @@ from transformers import FillMaskPipeline
 
 pip = FillMaskPipeline(model=model, tokenizer=tokenizer)
 
-pip("Soccer is a really fun [MASK].")
-pip("The Avengers is a really fun [MASK].")
-pip("I went to [MASK] this morning.")
+print(pip("Soccer is a really fun [MASK]."))
+print(pip("The Avengers is a really fun [MASK]."))
+print(pip("I went to [MASK] this morning."))
