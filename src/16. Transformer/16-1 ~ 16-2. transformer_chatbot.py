@@ -11,7 +11,7 @@ from icecream import ic
 
 class PositionalEncoding(tf.keras.layers.Layer):
     def __init__(self, position, d_model):
-        super(PositionalEncoding, self).__init__()
+        super().__init__()
         self.pos_encoding = self.positional_encoding(position, d_model)
 
     @staticmethod
@@ -383,9 +383,7 @@ def pos_encoding_attention_ex():
     ic(temp_out)  # 어텐션 값
 
 
-if __name__ == "__main__":
-    pos_encoding_attention_ex()
-
+def transformer_ex():
     small_transformer = transformer(
         vocab_size=9000,
         num_layers=4,
@@ -401,11 +399,14 @@ if __name__ == "__main__":
 
     sample_learning_rate = CustomSchedule(d_model=128)
 
+    plt.figure(figsize=(10, 6))
     plt.plot(sample_learning_rate(tf.range(200000, dtype=tf.float32)))
     plt.ylabel("Learning Rate")
     plt.xlabel("Train Step")
     plt.savefig("images/01-02", dpi=300)
 
+
+def transformer_chatbot():
     train_data = pd.read_csv("../data/ChatBotData.csv")
     print(train_data.head())
     print("챗봇 샘플의 개수 :", len(train_data))
@@ -605,3 +606,9 @@ if __name__ == "__main__":
     predict("게임하고싶은데 할래?")
     predict("나 너 좋아하는 것 같아")
     predict("딥 러닝 자연어 처리를 잘 하고 싶어")
+
+
+if __name__ == "__main__":
+    # pos_encoding_attention_ex()
+    # transformer_ex()
+    transformer_chatbot()
