@@ -18,8 +18,8 @@ print(tokenizer.decode(4))
 
 import pandas as pd
 from tqdm import tqdm
-import urllib.request
 
+# import urllib.request
 # urllib.request.urlretrieve(
 #     "https://raw.githubusercontent.com/songys/Chatbot_data/master/ChatbotData.csv",
 #     filename="../data/ChatBotData.csv",
