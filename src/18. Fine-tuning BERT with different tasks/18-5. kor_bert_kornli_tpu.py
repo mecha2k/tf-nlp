@@ -1,23 +1,28 @@
-import os
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-import urllib.request
 from sklearn import preprocessing
 import tensorflow as tf
 from transformers import BertTokenizer, TFBertModel
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
+
+# https://github.com/kakaobrain/KorNLUDatasets
+# koNLI (Natural Language Inference, 자연어추론), koSTS (Semantic Textual Similarity, 의미적 텍스트 유사성)
+
 train_snli = pd.read_csv("../data/snli_1.0_train.ko.tsv", sep="\t", quoting=3)
 train_xnli = pd.read_csv("../data/multinli.train.ko.tsv", sep="\t", quoting=3)
 val_data = pd.read_csv("../data/xnli.dev.ko.tsv", sep="\t", quoting=3)
 test_data = pd.read_csv("../data/xnli.test.ko.tsv", sep="\t", quoting=3)
-print(train_snli.head())
-print(train_xnli.head())
+# print(train_snli.head())
+# print(train_xnli.head())
 
 # 결합 후 섞기
 train_data = train_snli.append(train_xnli)
 train_data = train_data.sample(frac=1)
+# print(train_data.head())
+# print(val_data.head())
+# print(test_data.head())
 
 
 def drop_na_and_duplciates(df):
@@ -31,34 +36,35 @@ def drop_na_and_duplciates(df):
 train_data = drop_na_and_duplciates(train_data)
 val_data = drop_na_and_duplciates(val_data)
 test_data = drop_na_and_duplciates(test_data)
-print("훈련용 샘플 개수 :", len(train_data))
-print("검증용 샘플 개수 :", len(val_data))
-print("테스트용 샘플 개수 :", len(test_data))
 
-tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
-
-max_seq_len = 128
-
-sent1 = train_data["sentence1"].iloc[0]
-sent2 = train_data["sentence2"].iloc[0]
-print(sent1)
-print(sent2)
-
-encoding_result = tokenizer.encode_plus(
-    sent1, sent2, max_length=max_seq_len, pad_to_max_length=True
-)
-print(encoding_result["input_ids"])
-print(encoding_result["token_type_ids"])
-print(encoding_result["attention_mask"])
+train_data = train_data[:5000]
+val_data = val_data[:1000]
+test_data = test_data[:1000]
+print(train_data)
+print(val_data)
+print(test_data)
 
 
 def convert_examples_to_features(sent_list1, sent_list2, max_seq_len, tokenizer):
-
     input_ids, attention_masks, token_type_ids = [], [], []
 
     for sent1, sent2 in tqdm(zip(sent_list1, sent_list2), total=len(sent_list1)):
         encoding_result = tokenizer.encode_plus(
             sent1, sent2, max_length=max_seq_len, padding="max_length", truncation=True
+        )
+
+        assert (
+            len(encoding_result["input_ids"]) == max_seq_len
+        ), "Error with input length {} vs {}".format(len(encoding_result["input_ids"]), max_seq_len)
+        assert (
+            len(encoding_result["attention_mask"]) == max_seq_len
+        ), "Error with attention mask length {} vs {}".format(
+            len(encoding_result["attention_mask"]), max_seq_len
+        )
+        assert (
+            len(encoding_result["token_type_ids"]) == max_seq_len
+        ), "Error with token type length {} vs {}".format(
+            len(encoding_result["token_type_ids"]), max_seq_len
         )
 
         input_ids.append(encoding_result["input_ids"])
@@ -72,14 +78,19 @@ def convert_examples_to_features(sent_list1, sent_list2, max_seq_len, tokenizer)
     return input_ids, attention_masks, token_type_ids
 
 
+max_seq_len = 128
+
+tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
+
 X_train = convert_examples_to_features(
     train_data["sentence1"], train_data["sentence2"], max_seq_len=max_seq_len, tokenizer=tokenizer
 )
 
 # 최대 길이: 128
-input_id = X_train[0][0]
-attention_mask = X_train[1][0]
-token_type_id = X_train[2][0]
+nid = 1126
+input_id = X_train[0][nid]
+attention_mask = X_train[1][nid]
+token_type_id = X_train[2][nid]
 
 print("단어에 대한 정수 인코딩 :", input_id)
 print("어텐션 마스크 :", attention_mask)
