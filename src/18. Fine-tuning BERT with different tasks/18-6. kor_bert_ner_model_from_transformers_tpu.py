@@ -1,26 +1,18 @@
 import pandas as pd
 import numpy as np
-import os
+import tensorflow as tf
+
 from tqdm import tqdm
 from transformers import shape_list, BertTokenizer, TFBertModel
+from transformers import TFBertForTokenClassification
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from seqeval.metrics import f1_score, classification_report
-import tensorflow as tf
-
-# 1. 데이터 로드
-# !wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1jatBP8yZkWn6Kg6mjN7nWLnYVwXE_sY_' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1jatBP8yZkWn6Kg6mjN7nWLnYVwXE_sY_" -O ner_train_data.csv && rm -rf /tmp/cookies.txt
-# !wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1YVYShKCtWfigXBOb5ie7s6QmA-dHnjt3' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1YVYShKCtWfigXBOb5ie7s6QmA-dHnjt3" -O ner_test_data.csv && rm -rf /tmp/cookies.txt
-# !wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1_DPfdY1Q5Xt2md7QVbKcQLRDYHm3qgVQ' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1_DPfdY1Q5Xt2md7QVbKcQLRDYHm3qgVQ" -O ner_label.txt && rm -rf /tmp/cookies.txt
 
 train_ner_df = pd.read_csv("../data/ner_train_data.csv")
 test_ner_df = pd.read_csv("../data/ner_test_data.csv")
-train_ner_df.head()
-test_ner_df.head()
-
-# 훈련 데이터와 테스트 데이터의 샘플 개수를 확인해봅시다.
-print("학습 데이터 샘플 개수 :", len(train_ner_df))
-print("테스트 데이터 샘플 개수 :", len(test_ner_df))
+print(train_ner_df)
+print(test_ner_df)
 
 train_data_sentence = [sent.split() for sent in train_ner_df["Sentence"].values]
 test_data_sentence = [sent.split() for sent in test_ner_df["Sentence"].values]
@@ -36,10 +28,9 @@ index_to_tag = {index: tag for index, tag in enumerate(labels)}
 tag_size = len(tag_to_index)
 print("개체명 태깅 정보의 개수 :", tag_size)
 
-# 2. 전처리 예시
 tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
 
-# 3. 전처리
+
 def convert_examples_to_features(
     examples,
     labels,
@@ -116,9 +107,6 @@ X_test, y_test = convert_examples_to_features(
     test_data_sentence, test_data_label, max_seq_len=128, tokenizer=tokenizer
 )
 
-# 4. 모델링과 학습
-
-from transformers import TFBertForTokenClassification
 
 # TPU 작동을 위한 코드
 # resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='grpc://' + os.environ['COLAB_TPU_ADDR'])
@@ -131,7 +119,7 @@ model = TFBertForTokenClassification.from_pretrained(
     "klue/bert-base", num_labels=tag_size, from_pt=True
 )
 optimizer = tf.keras.optimizers.Adam(learning_rate=5e-5)
-model.compile(optimizer=optimizer, loss=model.compute_loss)
+model.compile(optimizer=optimizer, loss=model.hf_compute_loss)
 
 
 class F1score(tf.keras.callbacks.Callback):
@@ -172,8 +160,6 @@ class F1score(tf.keras.callbacks.Callback):
 f1_score_report = F1score(X_test, y_test)
 
 model.fit(X_train, y_train, epochs=3, batch_size=32, callbacks=[f1_score_report])
-
-# 5. 예측
 
 
 def convert_examples_to_features_for_prediction(
