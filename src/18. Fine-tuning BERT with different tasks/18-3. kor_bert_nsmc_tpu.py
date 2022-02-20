@@ -1,57 +1,48 @@
-import transformers
-
 import pandas as pd
 import numpy as np
-import urllib.request
-import os
-from tqdm import tqdm
 import tensorflow as tf
+import logging
+
+from tqdm import tqdm
 from transformers import BertTokenizer, TFBertModel
 
-# logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.ERROR)
 
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/e9t/nsmc/master/ratings_train.txt",
-#     filename="ratings_train.txt",
-# )
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/e9t/nsmc/master/ratings_test.txt",
-#     filename="ratings_test.txt",
-# )
-
-train_data = pd.read_table("ratings_train.txt")
-test_data = pd.read_table("ratings_test.txt")
+train_data = pd.read_table("../data/ratings_train.txt")
+test_data = pd.read_table("../data/ratings_test.txt")
 print("훈련용 리뷰 개수 :", len(train_data))  # 훈련용 리뷰 개수 출력
 print("테스트용 리뷰 개수 :", len(test_data))  # 테스트용 리뷰 개수 출력
 
 train_data = train_data.dropna(how="any")  # Null 값이 존재하는 행 제거
 train_data = train_data.reset_index(drop=True)
-print(train_data.isnull().values.any())  # Null 값이 존재하는지 확인
+print(train_data.isna().values.any())  # Null 값이 존재하는지 확인
 
 test_data = test_data.dropna(how="any")  # Null 값이 존재하는 행 제거
 test_data = test_data.reset_index(drop=True)
-print(test_data.isnull().values.any())  # Null 값이 존재하는지 확인
+print(test_data.isna().values.any())  # Null 값이 존재하는지 확인
+
+train_data = train_data[:15000]
+test_data = test_data[:5000]
+
 print(len(train_data))
 print(len(test_data))
+
 
 tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
 
 print(tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
 print(tokenizer.tokenize("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
-
-tokenizer.decode(tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
-
-for elem in tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"):
-    print(tokenizer.decode(elem))
+print(tokenizer.decode(tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역")))
+# for elem in tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"):
+#     print(tokenizer.decode(elem))
 
 print(tokenizer.tokenize("전율을 일으키는 영화. 다시 보고싶은 영화"))
 print(tokenizer.encode("전율을 일으키는 영화. 다시 보고싶은 영화"))
 
-for elem in tokenizer.encode("전율을 일으키는 영화. 다시 보고싶은 영화"):
-    print(tokenizer.decode(elem))
-
-for elem in tokenizer.encode("happy birthday~!"):
-    print(tokenizer.decode(elem))
+# for elem in tokenizer.encode("전율을 일으키는 영화. 다시 보고싶은 영화"):
+#     print(tokenizer.decode(elem))
+# for elem in tokenizer.encode("happy birthday~!"):
+#     print(tokenizer.decode(elem))
 
 print(tokenizer.decode(2))
 print(tokenizer.decode(3))
@@ -76,7 +67,6 @@ print(valid_num * [1] + (max_seq_len - valid_num) * [0])
 
 
 def convert_examples_to_features(examples, labels, max_seq_len, tokenizer):
-
     input_ids, attention_masks, token_type_ids, data_labels = [], [], [], []
 
     for example, label in tqdm(zip(examples, labels), total=len(examples)):
@@ -132,9 +122,8 @@ print("각 인코딩의 길이 :", len(input_id))
 print("정수 인코딩 복원 :", tokenizer.decode(input_id))
 print("레이블 :", label)
 
-model = TFBertModel.from_pretrained("klue/bert-base", from_pt=True)
 
-max_seq_len = 128
+model = TFBertModel.from_pretrained("klue/bert-base", from_pt=True)
 
 input_ids_layer = tf.keras.layers.Input(shape=(max_seq_len,), dtype=tf.int32)
 attention_masks_layer = tf.keras.layers.Input(shape=(max_seq_len,), dtype=tf.int32)
@@ -143,9 +132,7 @@ token_type_ids_layer = tf.keras.layers.Input(shape=(max_seq_len,), dtype=tf.int3
 outputs = model([input_ids_layer, attention_masks_layer, token_type_ids_layer])
 
 print(outputs)
-
 print(outputs[0])
-
 print(outputs[1])
 
 
@@ -181,7 +168,7 @@ model.compile(optimizer=optimizer, loss=loss, metrics=["accuracy"])
 
 model.fit(train_X, train_y, epochs=2, batch_size=64, validation_split=0.2)
 
-results = model.evaluate(test_X, test_y, batch_size=1024)
+results = model.evaluate(test_X, test_y, batch_size=512)
 print("test loss, test acc: ", results)
 
 
@@ -200,6 +187,7 @@ def sentiment_predict(new_sentence):
 
     encoded_input = [input_ids, attention_masks, token_type_ids]
     score = model.predict(encoded_input)[0][0]
+    print(new_sentence)
 
     if score > 0.5:
         print("{:.2f}% 확률로 긍정 리뷰입니다.\n".format(score * 100))

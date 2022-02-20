@@ -1,6 +1,5 @@
 from transformers import TFBertForMaskedLM
 from transformers import AutoTokenizer
-from icecream import ic
 
 model = TFBertForMaskedLM.from_pretrained("bert-large-uncased")
 tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
