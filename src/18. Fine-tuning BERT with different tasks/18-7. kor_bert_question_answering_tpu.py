@@ -7,6 +7,7 @@ import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 from transformers import BertTokenizerFast
+from transformers import TFBertModel
 import tensorflow as tf
 
 
@@ -130,8 +131,6 @@ X_test, y_test = delete_samples(val_encodings, deleting_list_for_test)
 # tf.config.experimental_connect_to_cluster(resolver)
 # tf.tpu.experimental.initialize_tpu_system(resolver)
 # strategy = tf.distribute.TPUStrategy(resolver)
-
-from transformers import TFBertModel
 
 
 class TFBertForQuestionAnswering(tf.keras.Model):

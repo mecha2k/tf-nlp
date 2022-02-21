@@ -3,14 +3,14 @@ import numpy as np
 import tensorflow as tf
 
 from tqdm import tqdm
-from transformers import shape_list, BertTokenizer, TFBertModel
+from transformers import BertTokenizer
 from transformers import TFBertForTokenClassification
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 from seqeval.metrics import f1_score, classification_report
 
 train_ner_df = pd.read_csv("../data/ner_train_data.csv")
 test_ner_df = pd.read_csv("../data/ner_test_data.csv")
+train_ner_df = train_ner_df[:5000]
+test_ner_df = test_ner_df[:500]
 print(train_ner_df)
 print(test_ner_df)
 
@@ -27,8 +27,6 @@ index_to_tag = {index: tag for index, tag in enumerate(labels)}
 
 tag_size = len(tag_to_index)
 print("개체명 태깅 정보의 개수 :", tag_size)
-
-tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
 
 
 def convert_examples_to_features(
@@ -100,6 +98,8 @@ def convert_examples_to_features(
     return (input_ids, attention_masks, token_type_ids), data_labels
 
 
+tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
+
 X_train, y_train = convert_examples_to_features(
     train_data_sentence, train_data_label, max_seq_len=128, tokenizer=tokenizer
 )
@@ -152,8 +152,9 @@ class F1score(tf.keras.callbacks.Callback):
 
         label_list, pred_list = self.sequences_to_tags(self.y_test, y_predicted)
 
-        score = f1_score(label_list, pred_list, suffix=True)
+        score = f1_score(label_list, pred_list, suffix=True, zero_division="warn")
         print(f"{epoch} - f1: {score * 100:04.2f}")
+        print(logs)
         print(classification_report(label_list, pred_list, suffix=True))
 
 

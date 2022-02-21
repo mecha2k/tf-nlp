@@ -4,7 +4,7 @@ from tqdm import tqdm
 from sklearn import preprocessing
 import tensorflow as tf
 from transformers import BertTokenizer, TFBertModel
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping
 
 
 # https://github.com/kakaobrain/KorNLUDatasets

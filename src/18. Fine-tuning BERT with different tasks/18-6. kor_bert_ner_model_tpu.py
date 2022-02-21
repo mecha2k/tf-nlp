@@ -1,17 +1,16 @@
 import pandas as pd
 import numpy as np
-import os
 from tqdm import tqdm
 from transformers import shape_list, BertTokenizer, TFBertModel
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 from seqeval.metrics import f1_score, classification_report
 import tensorflow as tf
 
 train_ner_df = pd.read_csv("../data/ner_train_data.csv")
 test_ner_df = pd.read_csv("../data/ner_test_data.csv")
-print("학습 데이터 샘플 개수 :", len(train_ner_df))
-print("테스트 데이터 샘플 개수 :", len(test_ner_df))
+train_ner_df = train_ner_df[:5000]
+test_ner_df = test_ner_df[:500]
+print(train_ner_df)
+print(test_ner_df)
 
 train_data_sentence = [sent.split() for sent in train_ner_df["Sentence"].values]
 test_data_sentence = [sent.split() for sent in test_ner_df["Sentence"].values]
@@ -26,12 +25,6 @@ index_to_tag = {index: tag for index, tag in enumerate(labels)}
 
 tag_size = len(tag_to_index)
 print("개체명 태깅 정보의 개수 :", tag_size)
-
-# 2. 전처리 예시
-
-tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
-
-# 3. 전처리
 
 
 def convert_examples_to_features(
@@ -103,6 +96,8 @@ def convert_examples_to_features(
     return (input_ids, attention_masks, token_type_ids), data_labels
 
 
+tokenizer = BertTokenizer.from_pretrained("klue/bert-base")
+
 X_train, y_train = convert_examples_to_features(
     train_data_sentence, train_data_label, max_seq_len=128, tokenizer=tokenizer
 )
@@ -110,8 +105,6 @@ X_train, y_train = convert_examples_to_features(
 X_test, y_test = convert_examples_to_features(
     test_data_sentence, test_data_label, max_seq_len=128, tokenizer=tokenizer
 )
-
-# 4. 모델링
 
 
 class TFBertForTokenClassification(tf.keras.Model):
@@ -135,9 +128,6 @@ class TFBertForTokenClassification(tf.keras.Model):
         return prediction
 
 
-# 5. 손실 함수
-
-
 def compute_loss(labels, logits):
 
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(
@@ -150,21 +140,20 @@ def compute_loss(labels, logits):
     return loss_fn(labels, reduced_logits)
 
 
-# 6. 학습
-
 # TPU 작동을 위한 코드
-resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
-    tpu="grpc://" + os.environ["COLAB_TPU_ADDR"]
-)
-tf.config.experimental_connect_to_cluster(resolver)
-tf.tpu.experimental.initialize_tpu_system(resolver)
+# resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
+#     tpu="grpc://" + os.environ["COLAB_TPU_ADDR"]
+# )
+# tf.config.experimental_connect_to_cluster(resolver)
+# tf.tpu.experimental.initialize_tpu_system(resolver)
+#
+# strategy = tf.distribute.experimental.TPUStrategy(resolver)
+#
+# with strategy.scope():
 
-strategy = tf.distribute.experimental.TPUStrategy(resolver)
-
-with strategy.scope():
-    model = TFBertForTokenClassification("klue/bert-base", num_labels=tag_size)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=5e-5)
-    model.compile(optimizer=optimizer, loss=compute_loss)
+model = TFBertForTokenClassification("klue/bert-base", num_labels=tag_size)
+optimizer = tf.keras.optimizers.Adam(learning_rate=5e-5)
+model.compile(optimizer=optimizer, loss=compute_loss)
 
 
 class F1score(tf.keras.callbacks.Callback):
@@ -192,13 +181,13 @@ class F1score(tf.keras.callbacks.Callback):
         return label_list, pred_list
 
     def on_epoch_end(self, epoch, logs):
-
         y_predicted = self.model.predict(self.X_test)
         y_predicted = np.argmax(y_predicted, axis=2)
 
         label_list, pred_list = self.sequences_to_tags(self.y_test, y_predicted)
 
-        score = f1_score(label_list, pred_list, suffix=True)
+        score = f1_score(label_list, pred_list, suffix=True, zero_division="warn")
+        print(logs)
         print(f"{epoch} - f1: {score * 100:04.2f}")
         print(classification_report(label_list, pred_list, suffix=True))
 
@@ -206,8 +195,6 @@ class F1score(tf.keras.callbacks.Callback):
 f1_score_report = F1score(X_test, y_test)
 
 model.fit(X_train, y_train, epochs=3, batch_size=32, callbacks=[f1_score_report])
-
-# 5. 예측
 
 
 def convert_examples_to_features_for_prediction(
