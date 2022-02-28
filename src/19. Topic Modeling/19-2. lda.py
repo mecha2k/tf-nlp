@@ -1,6 +1,3 @@
-# pip install pandas==1.3.1
-# pip install pyLDAvis
-
 import pandas as pd
 from sklearn.datasets import fetch_20newsgroups
 import nltk

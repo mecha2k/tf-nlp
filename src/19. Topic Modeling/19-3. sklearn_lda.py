@@ -1,19 +1,13 @@
 import pandas as pd
-import urllib.request
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
-nltk.download("punkt")
-nltk.download("stopwords")
-nltk.download("wordnet")
-
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/ukairia777/tensorflow-nlp-tutorial/main/21.%20Topic%20Modeling/dataset/abcnews-date-text.csv",
-#     filename="abcnews-date-text.csv",
-# )
+nltk.download("punkt", quiet=True)
+nltk.download("stopwords", quiet=True)
+nltk.download("wordnet", quiet=True)
 
 data = pd.read_csv("../data/abcnews-date-text.csv")
 print("뉴스 제목 개수 :", len(data))

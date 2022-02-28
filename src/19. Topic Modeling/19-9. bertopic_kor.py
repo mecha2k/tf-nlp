@@ -43,11 +43,12 @@ model = BERTopic(
     verbose=True,
 )
 
-topics, probs = model.fit_transform(preprocessed_documents)
-model.save("../data/bertopic_k_ex1")
-print(f"{len(topics)}")
+# topics, probs = model.fit_transform(preprocessed_documents)
+# model.save("../data/bertopic_k_ex1")
+# print(f"{len(topics)}")
 
-# BerTopic_model = BERTopic.load("../data/bertopic_k_ex1")
+model = BERTopic.load("../data/bertopic_k_ex1")
+topics, probs = model.transform(preprocessed_documents)
 
 model.visualize_topics().write_html("images/topics_k.html")
 model.visualize_distribution(probs[0]).write_html("images/dist_k.html")
