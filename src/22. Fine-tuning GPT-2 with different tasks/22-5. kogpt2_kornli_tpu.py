@@ -37,9 +37,7 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 
 print(tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
-
 print(tokenizer.tokenize("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
-
 tokenizer.decode(tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
 
 for elem in tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"):
