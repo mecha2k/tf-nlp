@@ -89,9 +89,9 @@ def combined_topic_modeling(preprocessed_documents, vocab, training_dataset):
     ctm.save(models_dir="../data/ctm_kor")
 
 
-def load_ctm_models():
+def load_ctm_models(vocab_len):
     ctm = CombinedTM(
-        bow_size=3000,
+        bow_size=vocab_len,
         contextual_size=768,
         num_epochs=100,
         n_components=50,
@@ -129,6 +129,8 @@ if __name__ == "__main__":
     # stable version: 2.2.0
     print(contextualized_topic_models.__version__)
 
+    vocab_len = 3000
     # preprocessed_documents, vocab, training_dataset = prepare_data()
     # combined_topic_modeling(preprocessed_documents, vocab, training_dataset)
-    load_ctm_models()
+    # vocab_len = len(vocab)
+    load_ctm_models(vocab_len)
