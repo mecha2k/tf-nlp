@@ -7,6 +7,8 @@ import contextualized_topic_models
 import nltk
 import pyLDAvis as vis
 import numpy as np
+import matplotlib.pyplot as plt
+import wordcloud
 from sklearn.feature_extraction.text import CountVectorizer
 from konlpy.tag import Mecab
 from tqdm import tqdm
@@ -55,7 +57,7 @@ def prepare_data():
 
 
 # Combined TM 학습하기
-def combined_topic_modeling():
+def combined_topic_modeling(preprocessed_documents, vocab, training_dataset):
     ctm = CombinedTM(
         bow_size=len(vocab),
         contextual_size=768,
@@ -89,7 +91,7 @@ def combined_topic_modeling():
 
 def load_ctm_models():
     ctm = CombinedTM(
-        bow_size=len(vocab),
+        bow_size=3000,
         contextual_size=768,
         num_epochs=100,
         n_components=50,
@@ -101,11 +103,32 @@ def load_ctm_models():
     )
     print(ctm.get_topic_lists(5))
 
+    # ctm.get_wordcloud(topic_id=5, n_words=15)
+    topic_id = 5
+    n_words = 20
+    word_score_list = ctm.get_word_distribution_by_topic_id(topic_id)[:n_words]
+    word_score_dict = {key: value for (key, value) in word_score_list}
+
+    word_cloud = wordcloud.WordCloud(
+        font_path="../data/NanumBarunGothic.ttf",
+        width=800,
+        height=400,
+        scale=2.0,
+        max_font_size=250,
+    )
+    gen_word_cloud = word_cloud.generate_from_frequencies(word_score_dict)
+
+    plt.figure()
+    plt.imshow(gen_word_cloud)
+    plt.axis("off")
+    plt.title("Displaying Topic " + str(topic_id), loc="center", fontsize=24)
+    word_cloud.to_file("images/word_cloud.png")
+
 
 if __name__ == "__main__":
     # stable version: 2.2.0
     print(contextualized_topic_models.__version__)
 
-    preprocessed_documents, vocab, training_dataset = prepare_data()
-    # combined_topic_modeling()
+    # preprocessed_documents, vocab, training_dataset = prepare_data()
+    # combined_topic_modeling(preprocessed_documents, vocab, training_dataset)
     load_ctm_models()
