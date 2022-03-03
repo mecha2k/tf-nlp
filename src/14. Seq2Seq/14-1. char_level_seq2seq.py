@@ -5,7 +5,7 @@ import shutil
 import os
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical, plot_model
 
 # http = urllib3.PoolManager()
 # url = "http://www.manythings.org/anki/fra-eng.zip"
@@ -23,7 +23,7 @@ del lines["lic"]
 print("전체 샘플의 개수 :", len(lines))
 
 lines = lines.loc[:, "src":"tar"]
-lines = lines[0:60000]  # 6만개만 저장
+lines = lines[:10000]
 print(lines.sample(10))
 
 lines.tar = lines.tar.apply(lambda x: "\t " + x + " \n")
@@ -121,14 +121,15 @@ decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_state
 decoder_softmax_layer = Dense(tar_vocab_size, activation="softmax")
 decoder_outputs = decoder_softmax_layer(decoder_outputs)
 
-model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
+model = Model(inputs=[encoder_inputs, decoder_inputs], outputs=decoder_outputs)
 model.compile(optimizer="rmsprop", loss="categorical_crossentropy")
+plot_model(model, "images/s2s_train.png", show_shapes=True)
 
 model.fit(
     x=[encoder_input, decoder_input],
     y=decoder_target,
     batch_size=64,
-    epochs=40,
+    epochs=2,
     validation_split=0.2,
 )
 
@@ -152,6 +153,7 @@ decoder_outputs = decoder_softmax_layer(decoder_outputs)
 decoder_model = Model(
     inputs=[decoder_inputs] + decoder_states_inputs, outputs=[decoder_outputs] + decoder_states
 )
+plot_model(decoder_model, "images/s2s_decoder.png", show_shapes=True)
 
 index_to_src = dict((i, char) for char, i in src_to_index.items())
 index_to_tar = dict((i, char) for char, i in tar_to_index.items())
