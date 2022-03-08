@@ -94,10 +94,10 @@ outputs = Dense(1, activation="sigmoid")(x)
 
 model = Model(inputs=inputs, outputs=outputs)
 model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
-plot_model(model, "bilstm_attention.png", show_shapes=True)
+plot_model(model, "images/bilstm_attention.png", show_shapes=True)
 model.summary()
 
-callbacks = [keras.callbacks.ModelCheckpoint("bilstm_attention.keras", save_best_only=True)]
+callbacks = [keras.callbacks.ModelCheckpoint("../data/bilstm_attention.keras", save_best_only=True)]
 history = model.fit(
     train_ds,
     epochs=1,
@@ -107,5 +107,5 @@ history = model.fit(
     verbose=1,
 )
 
-model = keras.models.load_model("bilstm_attention.keras")
+model = keras.models.load_model("../data/bilstm_attention.keras")
 print("\n 테스트 정확도: %.4f" % (model.evaluate(test_ds)[1]))
