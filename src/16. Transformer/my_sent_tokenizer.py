@@ -64,60 +64,60 @@ print("기존 문장: {}".format(original_string))
 # 서브워드텍스트인코더는 의미있는 단위의 서브워드로 토크나이징한다. 띄어쓰기 단위 X 형태소 분석 단위 X
 for ts in tokenized_string:
     print("{} ----> {}".format(ts, tokenizer.decode([ts])))
-
-
-# 토큰화 / 정수 인코딩 / 시작 토큰과 종료 토큰 추가 / 패딩
-def tokenize_and_filter(inputs, outputs):
-    tokenized_inputs, tokenized_outputs = [], []
-
-    for (sentence1, sentence2) in zip(inputs, outputs):
-        # encode(토큰화 + 정수 인코딩), 시작 토큰과 종료 토큰 추가
-        sentence1 = START_TOKEN + tokenizer.encode(sentence1) + END_TOKEN
-        sentence2 = START_TOKEN + tokenizer.encode(sentence2) + END_TOKEN
-
-        tokenized_inputs.append(sentence1)
-        tokenized_outputs.append(sentence2)
-
-    # 패딩
-    tokenized_inputs = tf.keras.preprocessing.sequence.pad_sequences(
-        tokenized_inputs, maxlen=MAX_LENGTH, padding="post"
-    )
-    tokenized_outputs = tf.keras.preprocessing.sequence.pad_sequences(
-        tokenized_outputs, maxlen=MAX_LENGTH, padding="post"
-    )
-
-    return tokenized_inputs, tokenized_outputs
-
-
-questions, answers = tokenize_and_filter(questions, answers)
-
-print("질문 데이터의 크기(shape) :", questions.shape)
-print("답변 데이터의 크기(shape) :", answers.shape)
-
-# 0번째 샘플을 임의로 출력
-print(questions[0])
-print(answers[0])
-
-print("단어 집합의 크기(Vocab size): {}".format(VOCAB_SIZE))
-print("전체 샘플의 수(Number of samples): {}".format(len(questions)))
-
-
-# 디코더의 실제값 시퀀스에서는 시작 토큰을 제거해야 한다.
-dataset = tf.data.Dataset.from_tensor_slices(
-    (
-        (questions[:, :-1], answers[:, :-1]),
-        answers[:, 1:]
-        # {"input_1": questions[:, :-1], "input_2": answers[:, :-1]},  # 디코더의 입력. 마지막 패딩 토큰이 제거된다.
-        # {"outputs": answers[:, 1:]},  # 맨 처음 토큰이 제거된다. 다시 말해 시작 토큰이 제거된다.
-    )
-)
-
-dataset = dataset.cache()
-dataset = dataset.shuffle(BUFFER_SIZE)
-dataset = dataset.batch(BATCH_SIZE)
-dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
-
-# 임의의 샘플에 대해서 [:, :-1]과 [:, 1:]이 어떤 의미를 가지는지 테스트해본다.
-print(answers[0])  # 기존 샘플
-print(answers[:1][:, :-1])  # 마지막 패딩 토큰 제거하면서 길이가 39가 된다.
-print(answers[:1][:, 1:])  # 맨 처음 토큰이 제거된다. 다시 말해 시작 토큰이 제거된다. 길이는 역시 39가 된다.
+#
+#
+# # 토큰화 / 정수 인코딩 / 시작 토큰과 종료 토큰 추가 / 패딩
+# def tokenize_and_filter(inputs, outputs):
+#     tokenized_inputs, tokenized_outputs = [], []
+#
+#     for (sentence1, sentence2) in zip(inputs, outputs):
+#         # encode(토큰화 + 정수 인코딩), 시작 토큰과 종료 토큰 추가
+#         sentence1 = START_TOKEN + tokenizer.encode(sentence1) + END_TOKEN
+#         sentence2 = START_TOKEN + tokenizer.encode(sentence2) + END_TOKEN
+#
+#         tokenized_inputs.append(sentence1)
+#         tokenized_outputs.append(sentence2)
+#
+#     # 패딩
+#     tokenized_inputs = tf.keras.preprocessing.sequence.pad_sequences(
+#         tokenized_inputs, maxlen=MAX_LENGTH, padding="post"
+#     )
+#     tokenized_outputs = tf.keras.preprocessing.sequence.pad_sequences(
+#         tokenized_outputs, maxlen=MAX_LENGTH, padding="post"
+#     )
+#
+#     return tokenized_inputs, tokenized_outputs
+#
+#
+# questions, answers = tokenize_and_filter(questions, answers)
+#
+# print("질문 데이터의 크기(shape) :", questions.shape)
+# print("답변 데이터의 크기(shape) :", answers.shape)
+#
+# # 0번째 샘플을 임의로 출력
+# print(questions[0])
+# print(answers[0])
+#
+# print("단어 집합의 크기(Vocab size): {}".format(VOCAB_SIZE))
+# print("전체 샘플의 수(Number of samples): {}".format(len(questions)))
+#
+#
+# # 디코더의 실제값 시퀀스에서는 시작 토큰을 제거해야 한다.
+# dataset = tf.data.Dataset.from_tensor_slices(
+#     (
+#         (questions[:, :-1], answers[:, :-1]),
+#         answers[:, 1:]
+#         # {"input_1": questions[:, :-1], "input_2": answers[:, :-1]},  # 디코더의 입력. 마지막 패딩 토큰이 제거된다.
+#         # {"outputs": answers[:, 1:]},  # 맨 처음 토큰이 제거된다. 다시 말해 시작 토큰이 제거된다.
+#     )
+# )
+#
+# dataset = dataset.cache()
+# dataset = dataset.shuffle(BUFFER_SIZE)
+# dataset = dataset.batch(BATCH_SIZE)
+# dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+#
+# # 임의의 샘플에 대해서 [:, :-1]과 [:, 1:]이 어떤 의미를 가지는지 테스트해본다.
+# print(answers[0])  # 기존 샘플
+# print(answers[:1][:, :-1])  # 마지막 패딩 토큰 제거하면서 길이가 39가 된다.
+# print(answers[:1][:, 1:])  # 맨 처음 토큰이 제거된다. 다시 말해 시작 토큰이 제거된다. 길이는 역시 39가 된다.

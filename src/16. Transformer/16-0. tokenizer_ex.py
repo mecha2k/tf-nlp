@@ -1,7 +1,21 @@
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 import tensorflow_datasets as tfds
-import re
+import string, re, random
+
+from tensorflow import keras
+from tensorflow.keras import Input, Model, Sequential
+from tensorflow.keras.layers import (
+    Layer,
+    TextVectorization,
+    Dropout,
+    Dense,
+    Embedding,
+    MultiHeadAttention,
+    LayerNormalization,
+)
+from tensorflow.keras.utils import plot_model
 
 
 def tfds_text_encoder(questions, answers):
@@ -100,30 +114,65 @@ def tfds_text_encoder(questions, answers):
     return dataset
 
 
+def normalize_sentence(data):
+    sentences = []
+    for sentence in data:
+        sentence = re.sub(r"([?.!,])", r" \1 ", sentence)
+        sentence = sentence.strip()
+        sentences.append(sentence)
+    return sentences
+
+
 if __name__ == "__main__":
     train_data = pd.read_csv("../data/ChatBotData.csv")
-    print(train_data.head())
-    print("챗봇 샘플의 개수 :", len(train_data))
-    print(train_data.isna().sum())
+    print(f"chatbot samples: {len(train_data):,}")
 
-    questions = []
-    for sentence in train_data["Q"]:
-        sentence = re.sub(r"([?.!,])", r" \1 ", sentence)
-        sentence = sentence.strip()
-        questions.append(sentence)
+    questions = normalize_sentence(train_data["Q"])
+    answers = normalize_sentence(train_data["A"])
 
-    answers = []
-    for sentence in train_data["A"]:
-        sentence = re.sub(r"([?.!,])", r" \1 ", sentence)
-        sentence = sentence.strip()
-        answers.append(sentence)
+    # dataset = tfds_text_encoder(questions, answers)
+    #
+    # for encoder, decoder in dataset.take(1):
+    #     print(encoder["inputs"][0])
+    #     print(encoder["dec_inputs"][0])
+    #     print(decoder["outputs"][0])
 
-    print(questions[:5])
-    print(answers[:5])
+    text_pairs = []
+    for question, answer in zip(questions, answers):
+        answer = "[start]" + answer + "[end]"
+        text_pairs.append((question, answer))
+    print(random.choice(text_pairs))
 
-    dataset = tfds_text_encoder(questions, answers)
+    random.shuffle(text_pairs)
+    num_val_samples = int(0.15 * len(text_pairs))
+    num_train_samples = len(text_pairs) - 2 * num_val_samples
+    train_pairs = text_pairs[:num_train_samples]
+    val_pairs = text_pairs[num_train_samples : num_train_samples + num_val_samples]
+    test_pairs = text_pairs[num_train_samples + num_val_samples :]
 
-    for encoder, decoder in dataset.take(1):
-        print(encoder["inputs"][0])
-        print(encoder["dec_inputs"][0])
-        print(decoder["outputs"][0])
+    strip_chars = string.punctuation
+    strip_chars = strip_chars.replace("[", "")
+    strip_chars = strip_chars.replace("]", "")
+
+    def custom_standardization(input_string):
+        lowercase = tf.strings.lower(input_string)
+        return tf.strings.regex_replace(lowercase, f"[{re.escape(strip_chars)}]", "")
+
+    vocab_size = 15000
+    sequence_length = 20
+
+    source_vectorization = TextVectorization(
+        max_tokens=vocab_size,
+        output_mode="int",
+        output_sequence_length=sequence_length,
+    )
+    target_vectorization = TextVectorization(
+        max_tokens=vocab_size,
+        output_mode="int",
+        output_sequence_length=sequence_length + 1,
+        standardize=custom_standardization,
+    )
+
+    train_texts = [pair for pair in train_pairs]
+    print(train_texts[:10])
+    # source_vectorization.adapt(train_texts)
