@@ -45,6 +45,11 @@ class PositionalEncoding(tf.keras.layers.Layer):
     def __call__(self, inputs):
         return inputs + self.pos_encoding[:, : tf.shape(inputs)[1], :]
 
+    # def get_config(self):
+    #     config = super().get_config()
+    #     config.update({"pos_encoding": self.pos_encoding})
+    #     return config
+
 
 def scaled_dot_product_attention(query, key, value, mask):
     # query 크기 : (batch_size, num_heads, query의 문장 길이, d_model/num_heads)
@@ -77,7 +82,7 @@ def scaled_dot_product_attention(query, key, value, mask):
 
 class MultiHeadAttention(tf.keras.layers.Layer):
     def __init__(self, d_model, num_heads, name="multi_head_attention"):
-        super(MultiHeadAttention, self).__init__(name=name)
+        super().__init__(name=name)
         self.num_heads = num_heads
         self.d_model = d_model
 
@@ -136,6 +141,29 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         outputs = self.dense(concat_attention)
 
         return outputs
+
+    # def get_config(self):
+    #     config = super().get_config()
+    #     config.update({"num_heads": self.num_heads, "d_model": self.d_model, "depth": self.depth})
+    #     return config
+
+
+class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
+    def __init__(self, d_model, warmup_steps=4000):
+        super().__init__()
+        self.d_model = d_model
+        self.d_model = tf.cast(self.d_model, tf.float32)
+        self.warmup_steps = warmup_steps
+
+    def __call__(self, step):
+        arg1 = tf.math.rsqrt(step)
+        arg2 = step * (self.warmup_steps**-1.5)
+        return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
+
+    # def get_config(self):
+    #     config = super().get_config()
+    #     config.update({"d_model": self.d_model, "warmup_steps": self.warmup_steps})
+    #     return config
 
 
 def create_padding_mask(x):
@@ -333,20 +361,6 @@ def transformer(vocab_size, num_layers, dff, d_model, num_heads, dropout, name="
     outputs = tf.keras.layers.Dense(units=vocab_size, name="outputs")(dec_outputs)
 
     return tf.keras.Model(inputs=[inputs, dec_inputs], outputs=outputs, name=name)
-
-
-class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
-    def __init__(self, d_model, warmup_steps=4000):
-        super(CustomSchedule, self).__init__()
-        self.d_model = d_model
-        self.d_model = tf.cast(self.d_model, tf.float32)
-        self.warmup_steps = warmup_steps
-
-    def __call__(self, step):
-        arg1 = tf.math.rsqrt(step)
-        arg2 = step * (self.warmup_steps**-1.5)
-
-        return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
 
 
 def pos_encoding_attention_ex():
@@ -570,9 +584,25 @@ def transformer_chatbot():
         return tf.reduce_mean(loss)
 
     model.compile(optimizer=optimizer, loss=loss_function, metrics=[accuracy])
+    # model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
-    EPOCHS = 50
+    EPOCHS = 20
+    callbacks = [tf.keras.callbacks.ModelCheckpoint("../data/transformer_chatbot.keras")]
     model.fit(dataset, epochs=EPOCHS)
+
+    # from keras.models import load_model, save_model
+    #
+    # save_model(model, "../data/transformer_chatbot.keras.h5")
+    # model = load_model("../data/transformer_chatbot.keras.h5")
+
+    # model = tf.keras.models.load_model(
+    #     "../data/transformer_chatbot.keras",
+    #     custom_objects={
+    #         "PositionalEncoding": PositionalEncoding,
+    #         "MultiHeadAttention": MultiHeadAttention,
+    #         # "CustomSchedule": CustomSchedule,
+    #     },
+    # )
 
     def evaluate(sentence):
         sentence = preprocess_sentence(sentence)
