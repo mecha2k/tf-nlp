@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import re
+from tensorflow.keras.utils import plot_model
 
 from icecream import ic
 
@@ -508,17 +509,24 @@ def transformer_chatbot():
     BUFFER_SIZE = 20000
 
     # 디코더의 실제값 시퀀스에서는 시작 토큰을 제거해야 한다.
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (
-            {"inputs": questions, "dec_inputs": answers[:, :-1]},  # 디코더의 입력. 마지막 패딩 토큰이 제거된다.
-            {"outputs": answers[:, 1:]},  # 맨 처음 토큰이 제거된다. 다시 말해 시작 토큰이 제거된다.
+    dataset = (
+        tf.data.Dataset.from_tensor_slices(
+            (
+                (questions, answers[:, :-1]),
+                answers[:, 1:]
+                # {"inputs": questions, "dec_inputs": answers[:, :-1]},  # 디코더의 입력. 마지막 패딩 토큰이 제거된다.
+                # {"outputs": answers[:, 1:]},  # 맨 처음 토큰이 제거된다. 다시 말해 시작 토큰이 제거된다.
+            )
         )
+        .shuffle(BUFFER_SIZE)
+        .batch(BATCH_SIZE)
     )
 
-    dataset = dataset.cache()
-    dataset = dataset.shuffle(BUFFER_SIZE)
-    dataset = dataset.batch(BATCH_SIZE)
-    dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+    # dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+
+    for encode, decode in dataset.take(1):
+        print(encode[0].shape)
+        print(decode[0].shape)
 
     # 임의의 샘플에 대해서 [:, :-1]과 [:, 1:]이 어떤 의미를 가지는지 테스트해본다.
     print(answers[0])  # 기존 샘플
@@ -542,6 +550,7 @@ def transformer_chatbot():
         num_heads=NUM_HEADS,
         dropout=DROPOUT,
     )
+    plot_model(model, "images/transformer_chatbot.png", show_shapes=True)
 
     learning_rate = CustomSchedule(D_MODEL)
     optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98, epsilon=1e-9)
@@ -553,14 +562,11 @@ def transformer_chatbot():
 
     def loss_function(y_true, y_pred):
         y_true = tf.reshape(y_true, shape=(-1, MAX_LENGTH - 1))
-
         loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction="none")(
             y_true, y_pred
         )
-
         mask = tf.cast(tf.not_equal(y_true, 0), tf.float32)
         loss = tf.multiply(loss, mask)
-
         return tf.reduce_mean(loss)
 
     model.compile(optimizer=optimizer, loss=loss_function, metrics=[accuracy])
