@@ -21,7 +21,7 @@ from tensorflow.keras.utils import plot_model
 def tfds_text_encoder(questions, answers):
     # 서브워드텍스트인코더를 사용하여 질문과 답변을 모두 포함한 단어 집합(Vocabulary) 생성
     tokenizer = tfds.deprecated.text.SubwordTextEncoder.build_from_corpus(
-        questions + answers, target_vocab_size=2**13
+        questions + answers, target_vocab_size=2 ** 13
     )
 
     # 시작 토큰과 종료 토큰에 대한 정수 부여.
@@ -131,7 +131,6 @@ if __name__ == "__main__":
     answers = normalize_sentence(train_data["A"])
 
     # dataset = tfds_text_encoder(questions, answers)
-    #
     # for encoder, decoder in dataset.take(1):
     #     print(encoder["inputs"][0])
     #     print(encoder["dec_inputs"][0])
@@ -147,7 +146,7 @@ if __name__ == "__main__":
     num_val_samples = int(0.15 * len(text_pairs))
     num_train_samples = len(text_pairs) - 2 * num_val_samples
     train_pairs = text_pairs[:num_train_samples]
-    val_pairs = text_pairs[num_train_samples : num_train_samples + num_val_samples]
+    valid_pairs = text_pairs[num_train_samples : num_train_samples + num_val_samples]
     test_pairs = text_pairs[num_train_samples + num_val_samples :]
 
     strip_chars = string.punctuation
@@ -159,7 +158,8 @@ if __name__ == "__main__":
         return tf.strings.regex_replace(lowercase, f"[{re.escape(strip_chars)}]", "")
 
     vocab_size = 15000
-    sequence_length = 20
+    sequence_length = 40
+    batch_size = 128
 
     source_vectorization = TextVectorization(
         max_tokens=vocab_size,
@@ -173,6 +173,43 @@ if __name__ == "__main__":
         standardize=custom_standardization,
     )
 
-    train_texts = [pair for pair in train_pairs]
-    print(train_texts[:10])
-    # source_vectorization.adapt(train_texts)
+    questions, answers = zip(*train_pairs)
+    source_vectorization.adapt(questions + answers)
+    target_vectorization.adapt(questions + answers)
+    vocabulary = source_vectorization.get_vocabulary()
+    idx_to_word = dict(zip(range(len(vocabulary)), vocabulary))
+
+    word_to_idx = dict(zip(vocabulary, range(len(vocabulary))))
+    print(len(word_to_idx), len(idx_to_word))
+
+    def format_dataset(source, target):
+        source = source_vectorization(source)
+        target = target_vectorization(target)
+        return (
+            {
+                "source": source,
+                "target": target[:, :-1],
+            },
+            target[:, 1:],
+        )
+
+    def make_dataset(pairs):
+        sources, targets = zip(*pairs)
+        sources = list(sources)
+        targets = list(targets)
+        dataset = tf.data.Dataset.from_tensor_slices((sources, targets)).batch(batch_size)
+        dataset = dataset.map(format_dataset, num_parallel_calls=4)
+        return dataset.shuffle(2048).prefetch(16)
+
+    train_ds = make_dataset(train_pairs)
+    valid_ds = make_dataset(valid_pairs)
+
+    for sources, targets in train_ds.take(1):
+        print(f"sources['source'].shape: {sources['source'].shape}")
+        print(f"sources['target'].shape: {sources['target'].shape}")
+        print(f"targets.shape: {targets.shape}")
+
+        encoded_sent = sources["source"][0].numpy()
+        decoded_sent = [idx_to_word[idx] for idx in encoded_sent]
+        print(encoded_sent)
+        print(decoded_sent)
