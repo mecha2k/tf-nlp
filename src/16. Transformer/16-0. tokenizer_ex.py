@@ -21,7 +21,7 @@ from tensorflow.keras.utils import plot_model
 def tfds_text_encoder(questions, answers):
     # 서브워드텍스트인코더를 사용하여 질문과 답변을 모두 포함한 단어 집합(Vocabulary) 생성
     tokenizer = tfds.deprecated.text.SubwordTextEncoder.build_from_corpus(
-        questions + answers, target_vocab_size=2 ** 13
+        questions + answers, target_vocab_size=2**13
     )
 
     # 시작 토큰과 종료 토큰에 대한 정수 부여.
