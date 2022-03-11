@@ -3,7 +3,6 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import string, re, random
-import tokenizers
 
 from tensorflow import keras
 from tensorflow.keras.layers import (
@@ -40,15 +39,6 @@ def morphs_text_mecab(data):
     for sent in tqdm(data):
         sentence = mecab.morphs(sent)
         sentence = " ".join(sentence)
-        sentences.append(sentence)
-    return sentences
-
-
-def normalize_sentence(data):
-    sentences = []
-    for sentence in data:
-        sentence = re.sub(r"([?.!,])", r" \1 ", sentence)
-        sentence = sentence.strip()
         sentences.append(sentence)
     return sentences
 
@@ -158,31 +148,117 @@ def text_vectorization(max_len, vocab_size, batch_size):
     )
 
 
-if __name__ == "__main__":
-    # text_vectorization(max_len=20, vocab_size=15000, batch_size=128)
+def normalize_sentence(data):
+    sentences = []
+    for sentence in data:
+        sentence = re.sub(r"([?.!,])", r" \1 ", sentence)
+        sentence = sentence.strip()
+        sentences.append(sentence)
+    return sentences
 
+
+def text_vectorization_tfds(max_len, vocab_size, batch_size):
     train_data = pd.read_csv("../data/ChatBotData.csv")
     print(f"chatbot samples: {len(train_data):,}")
 
-    with open("../data/chatbot_questions.txt", "w", encoding="utf8") as f:
-        f.write("\n".join(train_data["Q"]))
+    questions = normalize_sentence(train_data["Q"])
+    answers = normalize_sentence(train_data["A"])
 
-    print(tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
-    print(tokenizer.tokenize("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
-    print(tokenizer.decode(tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역")))
-
-    from tokenizers import (
-        ByteLevelBPETokenizer,
-        CharBPETokenizer,
-        SentencePieceBPETokenizer,
-        BertWordPieceTokenizer,
+    tokenizer = tfds.deprecated.text.SubwordTextEncoder.build_from_corpus(
+        questions + answers, target_vocab_size=vocab_size
     )
+    print(tokenizer.subwords[:10])
 
-    bert_wordpiece_tokenizer = BertWordPieceTokenizer(lowercase=True, strip_accents=True)
-    tokenizer.train(
-        files="../data/chatbot_questions.txt",
-        vocab_size=30000,
-        limit_alphabet=6000,
-        min_frequency=5,
+    print(questions[20])
+    encode_question = tokenizer.encode(questions[20])
+    print(f"Tokenized sample question(encode): {encode_question}")
+    print(f"Tokenized sample question(decode): {tokenizer.decode(encode_question)}")
+
+    start_token, end_token = [tokenizer.vocab_size], [tokenizer.vocab_size + 1]
+    vocab_size = tokenizer.vocab_size + 2
+
+    inputs, outputs = [], []
+    for (sent1, sent2) in zip(questions, answers):
+        sentence1 = start_token + tokenizer.encode(sent1) + end_token
+        sentence2 = start_token + tokenizer.encode(sent2) + end_token
+        inputs.append(sentence1)
+        outputs.append(sentence2)
+
+    questions = keras.preprocessing.sequence.pad_sequences(inputs, maxlen=max_len, padding="post")
+    answers = tf.keras.preprocessing.sequence.pad_sequences(
+        outputs, maxlen=max_len + 1, padding="post"
     )
-    tokenizer.save_model("../data/bert_tokenizer")
+    print(start_token, end_token)
+    print("vocabulary size :", vocab_size)
+    print("questions (shape) :", questions.shape)
+    print("answers (shape) :", answers.shape)
+
+    text_pairs = []
+    for question, answer in zip(questions, answers):
+        text_pairs.append((question, answer))
+    print(random.choice(text_pairs))
+
+    random.shuffle(text_pairs)
+    num_val_samples = int(0.15 * len(text_pairs))
+    num_train_samples = len(text_pairs) - 2 * num_val_samples
+    train_pairs = text_pairs[:num_train_samples]
+    valid_pairs = text_pairs[num_train_samples : num_train_samples + num_val_samples]
+    test_pairs = text_pairs[num_train_samples + num_val_samples :]
+
+    def format_dataset(source, target):
+        return (
+            {
+                "source": source,
+                "target": target[:, :-1],
+            },
+            target[:, 1:],
+        )
+
+    def make_dataset(pairs):
+        sources, targets = zip(*pairs)
+        sources = list(sources)
+        targets = list(targets)
+        dataset = tf.data.Dataset.from_tensor_slices((sources, targets)).batch(batch_size)
+        dataset = dataset.map(format_dataset, num_parallel_calls=4)
+        return dataset.shuffle(2048).prefetch(16)
+
+    train_ds = make_dataset(train_pairs)
+    valid_ds = make_dataset(valid_pairs)
+
+    for sources, targets in train_ds.take(1):
+        print(f"sources['source'].shape: {sources['source'].shape}")
+        print(f"sources['target'].shape: {sources['target'].shape}")
+        print(f"targets.shape: {targets.shape}")
+
+    return train_ds, valid_ds, test_pairs, vocab_size, tokenizer, start_token, end_token
+
+
+if __name__ == "__main__":
+    text_vectorization_tfds(max_len=20, vocab_size=15000, batch_size=128)
+    # text_vectorization(max_len=20, vocab_size=15000, batch_size=128)
+
+    # train_data = pd.read_csv("../data/ChatBotData.csv")
+    # print(f"chatbot samples: {len(train_data):,}")
+    #
+    # with open("../data/chatbot_questions.txt", "w", encoding="utf8") as f:
+    #     f.write("\n".join(train_data["Q"]))
+    #
+    # print(tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
+    # print(tokenizer.tokenize("보는내내 그대로 들어맞는 예측 카리스마 없는 악역"))
+    # print(tokenizer.decode(tokenizer.encode("보는내내 그대로 들어맞는 예측 카리스마 없는 악역")))
+    #
+    # from tokenizers import (
+    #     ByteLevelBPETokenizer,
+    #     CharBPETokenizer,
+    #     SentencePieceBPETokenizer,
+    #     BertWordPieceTokenizer,
+    # )
+    #
+    # bert_wordpiece_tokenizer = BertWordPieceTokenizer(lowercase=True, strip_accents=True)
+    # tokenizer.train(
+    #     files="../data/chatbot_questions.txt",
+    #     vocab_size=30000,
+    #     limit_alphabet=6000,
+    #     min_frequency=5,
+    # )
+    # tokenizer.save_model("../data/bert_tokenizer")
