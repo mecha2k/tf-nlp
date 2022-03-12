@@ -24,6 +24,7 @@ tokenizer.decode(output_ids)
 """# 2. Numpy로 Top 5 뽑기"""
 
 import numpy as np
+import random
 
 output = model(input_ids)
 print(output.logits)
@@ -37,7 +38,6 @@ tokenizer.convert_ids_to_tokens(top5.indices.numpy())
 sent = "근육이 커지기 위해서는"
 input_ids = tokenizer.encode(sent)
 
-import random
 
 while len(input_ids) < 50:
     output = model(np.array([input_ids]))
@@ -45,4 +45,4 @@ while len(input_ids) < 50:
     token_id = random.choice(top5.indices.numpy())
     input_ids.append(token_id)
 
-tokenizer.decode(input_ids)
+print(tokenizer.decode(input_ids))
