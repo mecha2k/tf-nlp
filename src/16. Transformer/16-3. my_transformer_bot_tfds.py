@@ -17,19 +17,9 @@ embed_dim = 256
 num_heads = 8
 dense_dim = 1024
 
-epochs = 20
+epochs = 1
 batch_size = 128
 buffer_size = 20000
-
-# (
-#     train_ds,
-#     valid_ds,
-#     idx_to_word,
-#     word_to_idx,
-#     test_pairs,
-#     source_vectorization,
-#     target_vectorization,
-# ) = text_vectorization(max_len=max_len, vocab_size=vocab_size, batch_size=batch_size)
 
 (
     train_ds,
@@ -42,6 +32,7 @@ buffer_size = 20000
 ) = text_vectorization_tfds(max_len=max_len, vocab_size=vocab_size, batch_size=batch_size)
 print(vocab_size)
 
+
 encoder_inputs = Input(shape=(None,), dtype="int64", name="source")
 x = PositionalEmbedding(max_len, vocab_size, embed_dim)(encoder_inputs)
 encoder_outputs = TransformerEncoder(embed_dim, dense_dim, num_heads)(x)
@@ -52,48 +43,54 @@ x = TransformerDecoder(embed_dim, dense_dim, num_heads)(x, encoder_outputs)
 x = Dropout(0.5)(x)
 decoder_outputs = Dense(vocab_size, activation="softmax")(x)
 transformer = Model(inputs=[encoder_inputs, decoder_inputs], outputs=decoder_outputs)
-plot_model(transformer, "images/my_transformer_bot.png", show_shapes=True)
+plot_model(transformer, "images/my_transformer_bot_tfds.png", show_shapes=True)
 transformer.summary()
 
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.98, epsilon=1e-9)
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005, beta_1=0.9, beta_2=0.98, epsilon=1e-9)
 transformer.compile(
     optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
 
-callbacks = [keras.callbacks.ModelCheckpoint("../data/my_transformer_bot.keras")]
-# transformer.fit(train_ds, epochs=epochs, validation_data=valid_ds, callbacks=callbacks)
+callbacks = [keras.callbacks.ModelCheckpoint("../data/my_transformer_bot.tfds")]
+transformer.fit(train_ds, epochs=epochs, validation_data=valid_ds)
 
-transformer = keras.models.load_model(
-    "../data/my_transformer_bot.keras",
-    custom_objects={
-        "PositionalEmbedding": PositionalEmbedding,
-        "TransformerEncoder": TransformerEncoder,
-        "TransformerDecoder": TransformerDecoder,
-    },
-)
+# transformer = keras.models.load_model(
+#     "../data/my_transformer_bot.tfds",
+#     custom_objects={
+#         "PositionalEmbedding": PositionalEmbedding,
+#         "TransformerEncoder": TransformerEncoder,
+#         "TransformerDecoder": TransformerDecoder,
+#     },
+# )
 
-# def decode_sequence(input_sentence):
-#     tokenized_input_sentence = source_vectorization([input_sentence])
-#     decoded_sentence = "[start]"
-#     for i in range(max_len):
-#         tokenized_target_sentence = target_vectorization([decoded_sentence])[:, :-1]
-#         predictions = transformer([tokenized_input_sentence, tokenized_target_sentence])
-#         sampled_token_index = np.argmax(predictions[0, i, :])
-#         sampled_token = idx_to_word[sampled_token_index]
-#         decoded_sentence += " " + sampled_token
-#         if sampled_token == "[end]":
-#             break
-#     return decoded_sentence
-#
-#
-# test_texts = [(pair[0], pair[1]) for pair in test_pairs]
-# for _ in range(20):
-#     input_sentence = random.choice(test_texts)
-#     print("-" * 90)
-#     print(input_sentence[0])
-#     print(input_sentence[1])
-#     print(decode_sequence(input_sentence[0]))
+
+def decode_sequence(sentence):
+    # sentence = re.sub(r"([?.!,])", r" \1 ", sentence)
+    # sentence = sentence.strip()
+    tokenized_sentence = tf.expand_dims(
+        start_token + tokenizer.encode(sentence) + end_token, axis=0
+    )
+    decoded_sentence = tf.expand_dims(start_token, axis=0)
+    for i in range(max_len):
+        tokenized_target_sentence = tokenizer.decode([decoded_sentence])
+        tokenized_target_sentence = tokenized_target_sentence[:, :-1]
+        predictions = transformer([tokenized_sentence, tokenized_target_sentence])
+        sampled_token_index = np.argmax(predictions[0, i, :])
+        sampled_token = tokenizer.decode(sampled_token_index)
+        decoded_sentence += " " + sampled_token
+        if sampled_token == "[end]":
+            break
+    return decoded_sentence
+
+
+test_texts = [(pair[0], pair[1]) for pair in test_pairs]
+for _ in range(1):
+    input_sentence = random.choice(test_texts)
+    print("-" * 90)
+    print(input_sentence[0])
+    print(input_sentence[1])
+    print(decode_sequence(input_sentence[0]))
 
 
 def evaluate(sentence):
@@ -104,7 +101,8 @@ def evaluate(sentence):
 
     for i in range(max_len):
         predictions = transformer(inputs=[sentence, output], training=False)
-        predictions = predictions[:, -1:, :]
+        predictions = predictions[:, i, :]
+        # predictions = predictions[:, -1:, :]
         predicted_id = tf.cast(tf.argmax(predictions, axis=-1), tf.int32)
         if tf.equal(predicted_id, end_token[0]):
             break
@@ -121,9 +119,9 @@ def predict(sentence):
     return predicted_sentence
 
 
-predict("영화 볼래?")
-predict("고민이 있어")
-predict("너무 화가나")
-predict("게임하고싶은데 할래?")
-predict("나 너 좋아하는 것 같아")
-predict("딥 러닝 자연어 처리를 잘 하고 싶어")
+# predict("영화 볼래?")
+# predict("고민이 있어")
+# predict("너무 화가나")
+# predict("게임하고싶은데 할래?")
+# predict("나 너 좋아하는 것 같아")
+# predict("딥 러닝 자연어 처리를 잘 하고 싶어")

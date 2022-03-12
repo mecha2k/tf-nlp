@@ -5,9 +5,9 @@ import tensorflow_datasets as tfds
 import string, re, random
 
 from tensorflow import keras
-from tensorflow.keras.layers import (
-    TextVectorization,
-)
+from tensorflow.keras.layers import TextVectorization
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
 from konlpy.tag import Okt, Mecab
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
@@ -165,7 +165,7 @@ def text_vectorization_tfds(max_len, vocab_size, batch_size):
     answers = normalize_sentence(train_data["A"])
 
     tokenizer = tfds.deprecated.text.SubwordTextEncoder.build_from_corpus(
-        questions + answers, target_vocab_size=vocab_size
+        questions + answers, target_vocab_size=2**13
     )
     print(tokenizer.subwords[:10])
 
@@ -220,7 +220,7 @@ def text_vectorization_tfds(max_len, vocab_size, batch_size):
         targets = list(targets)
         dataset = tf.data.Dataset.from_tensor_slices((sources, targets)).batch(batch_size)
         dataset = dataset.map(format_dataset, num_parallel_calls=4)
-        return dataset.shuffle(2048).prefetch(16)
+        return dataset.shuffle(20480).prefetch(16)
 
     train_ds = make_dataset(train_pairs)
     valid_ds = make_dataset(valid_pairs)
@@ -233,8 +233,100 @@ def text_vectorization_tfds(max_len, vocab_size, batch_size):
     return train_ds, valid_ds, test_pairs, vocab_size, tokenizer, start_token, end_token
 
 
+def char_vectorization(batch_size=64):
+    train_data = pd.read_csv("../data/ChatBotData.csv")
+    print(f"chatbot samples: {len(train_data):,}")
+
+    buffer_size = 20000
+
+    questions = normalize_sentence(train_data["Q"])
+    answers = normalize_sentence(train_data["A"])
+    answers = ["\t" + answer + "\n" for answer in answers]
+    print(answers[0])
+
+    vocab_set = set()
+    for line in questions + answers:
+        for char in line:
+            vocab_set.add(char)
+
+    vocab_size = len(vocab_set) + 2
+    print("문장의 char 집합 :", vocab_size)
+
+    vocab_set = sorted(list(vocab_set))
+    print(vocab_set[:10])
+
+    char_to_idx = dict([(word, i + 1) for i, word in enumerate(vocab_set)])
+    idx_to_char = dict([(i + 1, word) for i, word in enumerate(vocab_set)])
+
+    def char_encoding(inputs):
+        sentences = []
+        for sentence in inputs:
+            encoded_char = []
+            for char in sentence:
+                encoded_char.append(char_to_idx[char])
+            sentences.append(encoded_char)
+        return sentences
+
+    sources = char_encoding(questions)
+    targets = char_encoding(answers)
+    print("source 문장의 정수 인코딩 :", sources[:2])
+    print("target 문장의 정수 인코딩 :", targets[:2])
+    print("Decoding [0] : ", str([idx_to_char[word] for word in sources[0]]))
+
+    max_src_len = max([len(line) for line in sources])
+    max_tar_len = max([len(line) for line in targets])
+    max_len = max(max_src_len, max_tar_len) + 10
+    print("문장의 최대 길이 :", max_len)
+
+    print("vocabulary size :", vocab_size)
+    print("questions (shape) :", np.asarray(sources, dtype=object).shape)
+    print("answers (shape) :", np.asarray(targets, dtype=object).shape)
+
+    sources = pad_sequences(sources, maxlen=max_len, padding="post")
+    targets = pad_sequences(targets, maxlen=max_len + 1, padding="post")
+
+    text_pairs = []
+    for source, target in zip(sources, targets):
+        text_pairs.append((source, target))
+
+    random.shuffle(text_pairs)
+    num_val_samples = int(0.15 * len(text_pairs))
+    num_train_samples = len(text_pairs) - 2 * num_val_samples
+    train_pairs = text_pairs[:num_train_samples]
+    valid_pairs = text_pairs[num_train_samples : num_train_samples + num_val_samples]
+    test_pairs = text_pairs[num_train_samples + num_val_samples :]
+
+    def format_dataset(source, target):
+        return (
+            {
+                "source": source,
+                "target": target[:, :-1],
+            },
+            target[:, 1:],
+        )
+
+    def make_dataset(pairs):
+        sources, targets = zip(*pairs)
+        sources = list(sources)
+        targets = list(targets)
+        dataset = tf.data.Dataset.from_tensor_slices((sources, targets)).batch(batch_size)
+        dataset = dataset.map(format_dataset, num_parallel_calls=4)
+        return dataset.shuffle(buffer_size=buffer_size).prefetch(16)
+
+    train_ds = make_dataset(train_pairs)
+    valid_ds = make_dataset(valid_pairs)
+
+    for sources, targets in train_ds.take(1):
+        print(f"sources['source'].shape: {sources['source'].shape}")
+        print(f"sources['target'].shape: {sources['target'].shape}")
+        print(f"targets.shape: {targets.shape}")
+
+    return train_ds, valid_ds, test_pairs, vocab_size, max_len
+
+
 if __name__ == "__main__":
-    text_vectorization_tfds(max_len=20, vocab_size=15000, batch_size=128)
+    # char_vectorization(batch_size=64)
+    text_vectorization_tfds(max_len=40, vocab_size=15000, batch_size=64)
     # text_vectorization(max_len=20, vocab_size=15000, batch_size=128)
 
     # train_data = pd.read_csv("../data/ChatBotData.csv")
