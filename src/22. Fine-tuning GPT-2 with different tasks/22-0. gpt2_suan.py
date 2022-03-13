@@ -6,7 +6,6 @@ import os, re
 
 import gluonnlp as nlp
 from gluonnlp.data import SentencepieceTokenizer
-from nltk.tokenize import sent_tokenize
 
 import tensorflow as tf
 from tensorflow import keras
@@ -278,13 +277,13 @@ plt.plot(steps, accuracy, "bo", label="Training accuracy")
 plt.plot(steps, val_accuracy, "b", label="Validation accuracy")
 plt.title("Training and validation accuracy")
 plt.legend()
-plt.savefig("gpt2_accuracy", dpi=300)
+plt.savefig("images/gpt2_accuracy", dpi=300)
 plt.figure(figsize=(10, 6))
 plt.plot(steps, loss, "bo", label="Training loss")
 plt.plot(steps, val_loss, "b", label="Validation loss")
 plt.title("Training and validation loss")
 plt.legend()
-plt.savefig("gpt2_loss", dpi=300)
+plt.savefig("images/gpt2_loss", dpi=300)
 
 model.load_weights(file_path)
 model.evaluate(test_texts, test_labels, batch_size=1024)
