@@ -1,7 +1,8 @@
-# import numpy as np
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 import transformers
-import os
+import os, re
 
 import gluonnlp as nlp
 from gluonnlp.data import SentencepieceTokenizer
@@ -9,10 +10,16 @@ from nltk.tokenize import sent_tokenize
 
 import tensorflow as tf
 from tensorflow import keras
+from keras.layers import Dropout, Dense
+from keras.initializers import TruncatedNormal
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from transformers import TFGPT2LMHeadModel
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from transformers import TFGPT2LMHeadModel, TFGPT2Model
 
 print(transformers.__version__)
+
+np.random.seed(seed=42)
+tf.random.set_seed(seed=42)
 
 
 class GPT2Model(keras.Model):
@@ -127,3 +134,157 @@ def accuracy_function(real, pred):
     pred *= mask
     acc = train_accuracy(real, pred)
     return tf.reduce_mean(acc)
+
+
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+    loss=loss_function,
+    metrics=[accuracy_function],
+)
+
+# history = model.fit(inputs, outputs, epochs=epochs, batch_size=batch_size, validation_split=0.1)
+
+model_path = "../data/tf_gpt2_finetuned"
+if not os.path.exists(model_path):
+    os.makedirs(model_path)
+
+model.gpt2.save_pretrained(model_path)
+model = GPT2Model(model_path)
+
+print(generate_sentence("방금", model, greedy=True))
+# print(generate_sentence("언제나", model, greedy=True))
+# print(generate_sentence("오늘", model, greedy=True))
+
+
+epochs = 3
+batch_size = 32
+max_len = 40
+
+tokenizer_path = "../data/gpt_ckpt/gpt2_kor_tokenizer.spiece"
+
+tokenizer = SentencepieceTokenizer(tokenizer_path)
+vocab = nlp.vocab.BERTVocab.from_sentencepiece(
+    tokenizer_path,
+    mask_token=None,
+    sep_token="<sep>",
+    cls_token=None,
+    unknown_token="<unk>",
+    padding_token="<pad>",
+    bos_token="<s>",
+    eos_token="</s>",
+)
+
+train_ds = pd.read_table("../data/ratings_train.txt")
+test_ds = pd.read_table("../data/ratings_test.txt")
+
+
+def clean_sentence(sentence):
+    sentence = re.sub(r"[^ㄱ-ㅎㅏ-ㅣ가-힣 \s]", "", sentence)
+    return re.sub("^ +", "", sentence)
+
+
+train_ds = train_ds.drop_duplicates(subset=["document"]).dropna(how="any")
+test_ds = test_ds.drop_duplicates(subset=["document"]).dropna(how="any")
+print(train_ds.head())
+print(len(train_ds))
+train_ds["document"] = train_ds["document"].apply(clean_sentence)
+test_ds["document"] = test_ds["document"].apply(clean_sentence)
+train_ds["document"] = train_ds["document"].replace("", np.nan)
+test_ds["document"] = test_ds["document"].replace("", np.nan)
+train_ds = train_ds.dropna(how="any")
+test_ds = test_ds.dropna(how="any")
+print(train_ds.head())
+print(len(train_ds))
+
+
+def make_review_data(data_df):
+    texts, labels = [], []
+    for data, label in data_df[["document", "label"]].values:
+        tokenized_sentence = vocab[tokenizer(data)]
+        tokens = [vocab[vocab.bos_token]]
+        tokens += pad_sequences(
+            [tokenized_sentence], maxlen=max_len, value=vocab[vocab.padding_token], padding="post"
+        ).tolist()[0]
+        tokens += [vocab[vocab.eos_token]]
+        texts.append(tokens)
+        labels.append(label)
+    texts = np.array(texts, dtype=np.int64)
+    labels = np.array(labels, dtype=np.int64)
+    return texts, labels
+
+
+train_texts, train_labels = make_review_data(train_ds)
+test_texts, test_labels = make_review_data(test_ds)
+
+
+class TFGPT2Classification(keras.Model):
+    def __init__(self, path, num_class):
+        super().__init__()
+        self.gpt2 = TFGPT2Model.from_pretrained(path)
+        self.num_class = num_class
+
+        self.dropout = Dropout(self.gpt2.config.summary_first_dropout)
+        self.classifier = Dense(
+            self.num_class,
+            kernel_initializer=TruncatedNormal(stddev=self.gpt2.config.initializer_range),
+        )
+
+    def call(self, inputs):
+        outputs = self.gpt2(inputs)[0][:, -1]
+        outputs = self.dropout(outputs)
+        outputs = self.classifier(outputs)
+        return outputs
+
+
+model_path = "../data/gpt_ckpt"
+if not os.path.exists(model_path):
+    os.makedirs(model_path, exist_ok=bool)
+
+model = TFGPT2Classification(path=model_path, num_class=2)
+
+optimizer = tf.keras.optimizers.Adam(learning_rate=5e-5)
+loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+metric = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
+model.compile(optimizer=optimizer, loss=loss, metrics=[metric])
+
+file_path = model_path + "/weights.h5"
+callbacks = [
+    EarlyStopping(monitor="val_accuracy", min_delta=0.0001, patience=2),
+    ModelCheckpoint(
+        filepath=file_path,
+        monitor="val_accuracy",
+        verbose=1,
+        save_best_only=True,
+        save_weights_only=True,
+    ),
+]
+
+history = model.fit(
+    train_texts,
+    train_labels,
+    epochs=epochs,
+    batch_size=batch_size,
+    validation_split=0.1,
+    callbacks=callbacks,
+)
+
+accuracy = history.history["accuracy"]
+val_accuracy = history.history["val_accuracy"]
+loss = history.history["loss"]
+val_loss = history.history["val_loss"]
+steps = range(1, len(accuracy) + 1)
+plt.figure(figsize=(10, 6))
+plt.plot(steps, accuracy, "bo", label="Training accuracy")
+plt.plot(steps, val_accuracy, "b", label="Validation accuracy")
+plt.title("Training and validation accuracy")
+plt.legend()
+plt.savefig("gpt2_accuracy", dpi=300)
+plt.figure(figsize=(10, 6))
+plt.plot(steps, loss, "bo", label="Training loss")
+plt.plot(steps, val_loss, "b", label="Validation loss")
+plt.title("Training and validation loss")
+plt.legend()
+plt.savefig("gpt2_loss", dpi=300)
+
+model.load_weights(file_path)
+model.evaluate(test_texts, test_labels, batch_size=1024)
