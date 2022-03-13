@@ -24,7 +24,7 @@ model = AutoModelForCausalLM.from_pretrained(
     pad_token_id=tokenizer.eos_token_id,
     torch_dtype="auto",
     low_cpu_mem_usage=True,
-).to(device="cuda", non_blocking=True)
+).to(device="cpu", non_blocking=True)
 _ = model.eval()
 
 print("Model loading done")
@@ -32,7 +32,7 @@ print("Model loading done")
 
 def gpt(prompt):
     with torch.no_grad():
-        tokens = tokenizer.encode(prompt, return_tensors="pt").to(device="cuda", non_blocking=True)
+        tokens = tokenizer.encode(prompt, return_tensors="pt").to(device="cpu", non_blocking=True)
         gen_tokens = model.generate(tokens, do_sample=True, temperature=0.8, max_length=256)
         generated = tokenizer.batch_decode(gen_tokens)[0]
     return generated
