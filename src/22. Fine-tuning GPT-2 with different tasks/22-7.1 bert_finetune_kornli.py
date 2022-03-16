@@ -14,8 +14,8 @@ epochs = 3
 batch_size = 32
 max_len = 24 * 2
 
-tf.random.set_seed(42)
 np.random.seed(42)
+tf.random.set_seed(42)
 
 
 ## KorNLI Dataset
