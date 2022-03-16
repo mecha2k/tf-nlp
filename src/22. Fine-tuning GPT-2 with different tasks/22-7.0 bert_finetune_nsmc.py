@@ -7,7 +7,7 @@ from tqdm import tqdm
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from transformers import BertTokenizer, TFBertModel
+from transformers import AutoModel, AutoTokenizer, TFBertModel, BertTokenizer
 from transformers import logging
 
 logging.set_verbosity(logging.ERROR)
@@ -20,24 +20,20 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 np.random.seed(42)
 tf.random.set_seed(42)
 
-tokenizer = BertTokenizer.from_pretrained(
-    "bert-base-multilingual-cased", cache_dir="../data/bert_ckpt", do_lower_case=False
-)
+model_name = "bert-base-multilingual-cased"
+cache_dir = "../data/bert_ckpt"
 
-test_sentence = "안녕하세요, 반갑습니다."
+# model_name = "klue/bert-base"
+# cache_dir = "../data/klue_bert"
+
+tokenizer = BertTokenizer.from_pretrained(model_name, cache_dir=cache_dir, do_lower_case=False)
+
+test_sentence = "코로나가 심각한 상황입니다."
 encode = tokenizer.encode(test_sentence)
-token_print = [tokenizer.decode(token) for token in encode]
+print(tokenizer.tokenize(test_sentence))
 print(encode)
 print(tokenizer.decode(encode))
-print(token_print)
-
-test_sentence = "Hello world !!"
-encode = tokenizer.encode(test_sentence)
-token_print = [tokenizer.decode(token) for token in encode]
-print(encode)
-print(tokenizer.decode(encode))
-print(token_print)
-
+print("-" * 50)
 print(tokenizer.all_special_tokens)
 print(tokenizer.all_special_ids)
 
@@ -108,9 +104,9 @@ x_test, y_test = make_review_data(test_ds)
 
 
 class TFBertClassifier(tf.keras.Model):
-    def __init__(self, model_name, dir_path, num_class):
+    def __init__(self, model_name, cache_dir, num_class):
         super().__init__()
-        self.bert = TFBertModel.from_pretrained(model_name, cache_dir=dir_path)
+        self.bert = TFBertModel.from_pretrained(model_name, cache_dir=cache_dir)
         self.dropout = tf.keras.layers.Dropout(self.bert.config.hidden_dropout_prob)
         self.classifier = tf.keras.layers.Dense(
             num_class,
@@ -128,9 +124,7 @@ class TFBertClassifier(tf.keras.Model):
         return logits
 
 
-model = TFBertClassifier(
-    model_name="bert-base-multilingual-cased", dir_path="../data/bert_ckpt", num_class=2
-)
+model = TFBertClassifier(model_name=model_name, cache_dir=cache_dir, num_class=2)
 
 optimizer = tf.keras.optimizers.Adam(3e-5)
 loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
