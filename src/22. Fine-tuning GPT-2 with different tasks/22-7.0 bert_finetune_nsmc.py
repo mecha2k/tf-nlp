@@ -86,6 +86,7 @@ def make_review_data(df):
             max_length=max_len,
             padding="max_length",
             truncation=True,
+            return_token_type_ids=True,
             return_attention_mask=True,
         )
         input_ids.append(encoded_sentence["input_ids"])
