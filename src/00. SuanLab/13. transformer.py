@@ -4,18 +4,17 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import os
 
+from tensorflow.keras.layers import Dense, Dropout, Embedding
+
 
 np.random.seed(42)
-np.set_printoptions(suppress=True)
+np.set_printoptions(precision=3, suppress=True)
 plt.style.use("seaborn")
 plt.rcParams["font.size"] = 14
 plt.rcParams["figure.dpi"] = 200
 plt.rcParams["font.family"] = "NanumBarunGothic"
 plt.rcParams["axes.unicode_minus"] = False
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
-
-
-from tensorflow.keras.layers import Dense, Dropout, Embedding
 
 
 def positional_encoding(max_len, embed_dim):
@@ -28,7 +27,7 @@ def positional_encoding(max_len, embed_dim):
     )
     encoded_vec[0::2] = np.sin(encoded_vec[0::2])
     encoded_vec[1::2] = np.cos(encoded_vec[1::2])
-    return tf.constant(encoded_vec.reshape(shape=(max_len, embed_dim)), dtype=tf.float32)
+    return tf.constant(encoded_vec.reshape((max_len, embed_dim)), dtype=tf.float32)
 
 
 def layer_normalization(inputs, eps=1e-6):
@@ -142,40 +141,74 @@ import re
 
 okt = Okt()
 
+(PAD, STA, END, UNK) = ("<PAD>", "<STA>", "<END>", "<UNK>")
+(PAD_IDX, STA_IDX, END_IDX, UNK_IDX) = (0, 1, 2, 3)
 
-def preprocessing_morphs(lines):
+pattern = re.compile(pattern="([~.,!?\"':;()])")
+
+
+def apply_morphs(lines):
     return [" ".join(okt.morphs(line.replace(" ", ""))) for line in lines]
 
 
-df = pd.read_csv("../data/ChatBotData.csv")
-df = df[:100]
+def encoder_preprocessing(lines, dictionary):
+    sentences, sent_len = [], []
+    for line in lines:
+        line = re.sub(pattern=pattern, repl="", string=line)
+        sentence = []
+        for word in line.split():
+            if dictionary.get(word) is not None:
+                sentence.extend([dictionary[word]])
+            else:
+                sentence.extend([dictionary[UNK]])
+        if len(sentence) > max_len:
+            sentence = sentence[:max_len]
+        sent_len.append(len(sentence))
+        sentence += (max_len - len(sentence)) * [dictionary[PAD]]
+        sentences.append(sentence)
+    return np.array(sentences), sent_len
 
-question = preprocessing_morphs(df["Q"].to_numpy())
-answer = preprocessing_morphs(df["A"].to_numpy())
-lines = np.concatenate([question, answer])
-print(lines.shape)
 
-(PAD_IDX, STA_IDX, END_IDX, UNK_IDX) = (0, 1, 2, 3)
-(PAD, STA, END, UNK) = ("<PADDING>", "<START>", "<END>", "<UNKNOWN>")
+def decoder_output_preprocessing(lines, dictionary):
+    sentences, sent_len = [], []
+    for line in lines:
+        line = re.sub(pattern=pattern, repl="", string=line)
+        sentence = [dictionary[STA]] + [dictionary[word] for word in line.split()]
+        if len(sentence) > max_len:
+            sentence = sentence[:max_len]
+        sent_len.append(len(sentence))
+        sentence += (max_len - len(sentence)) * [dictionary[PAD]]
+        sentences.append(sentence)
+    return np.array(sentences), sent_len
 
-patterns = re.compile(pattern="([~.,!?\"':;()])")
 
-words = []
-for line in lines:
-    line = re.sub(patterns, "", line)
-    for word in line.split():
-        words.append(word)
-words = list(set([word for word in words if word]))
-words[:0] = [PAD, STA, END, UNK]
+def decoder_target_preprocessing(lines, dictionary):
+    sentences = []
+    for line in lines:
+        line = re.sub(pattern=pattern, repl="", string=line)
+        sentence = [dictionary[word] for word in line.split()]
+        if len(sentence) >= max_len:
+            sentence = sentence[: max_len - 1] + [dictionary[END]]
+        else:
+            sentence += [dictionary[END]]
+        sentence += (max_len - len(sentence)) * [dictionary[PAD]]
+        sentences.append(sentence)
+    return np.array(sentences)
 
-vocab_size = len(words)
-cha2idx = dict([(word, idx) for idx, word in enumerate(words)])
-idx2cha = dict([(idx, word) for idx, word in enumerate(words)])
 
-x_train, x_test, y_train, y_test = train_test_split(
-    df["Q"].to_numpy(), df["A"].to_numpy(), test_size=0.2, random_state=42
-)
-print(x_train.shape)
+def index2string(lines, dictionary):
+    sentence = []
+    finished = False
+    for line in lines:
+        sentence = [dictionary[idx] for idx in line["indexs"]]
+    answer = ""
+    for word in sentence:
+        if word == END:
+            finished = True
+            break
+        if word != PAD:
+            answer += word + " "
+    return answer, finished
 
 
 def make_model(features, labels, mode, params):
@@ -185,7 +218,7 @@ def make_model(features, labels, mode, params):
 
     positional_encode = positional_encoding(params["max_len"], params["embed_dim"])
     if params["xavier_initializer"]:
-        embedding_initializer = "glorot_normal"
+        embedding_initializer = tf.keras.initializers.glorot_normal(seed=42)
     else:
         embedding_initializer = "uniform"
 
@@ -195,8 +228,8 @@ def make_model(features, labels, mode, params):
         embeddings_initializer=embedding_initializer,
     )
 
-    x_embedded_matrix = embedding(features["inputs"] + positional_encode)
-    y_embedded_matrix = embedding(features["outputs"] + positional_encode)
+    x_embedded_matrix = embedding(features["inputs"]) + positional_encode
+    y_embedded_matrix = embedding(features["outputs"]) + positional_encode
 
     encoder_outputs = encoders(
         x_embedded_matrix,
@@ -206,7 +239,7 @@ def make_model(features, labels, mode, params):
         params["num_layers"],
     )
     decoder_outputs = decoders(
-        x_embedded_matrix,
+        y_embedded_matrix,
         encoder_outputs,
         params["embed_dim"],
         params["num_heads"],
@@ -218,12 +251,12 @@ def make_model(features, labels, mode, params):
     predictions = tf.argmax(logits, axis=2)
 
     if PREDICT:
-        predictions = {"indexs": prediction, "logits": logits}
+        predictions = {"indexs": predictions, "logits": logits}
         return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
-    labels = tf.one_hot(labels, depth=params["vocab_size"])
+    labels_ = tf.one_hot(labels, depth=params["vocab_size"])
     loss = tf.reduce_mean(
-        tf.compat.v1.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels)
+        tf.compat.v1.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels_)
     )
     accuracy = tf.compat.v1.metrics.accuracy(labels=labels, predictions=predictions)
 
@@ -240,13 +273,130 @@ def make_model(features, labels, mode, params):
     return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
 
 
+df = pd.read_csv("../data/ChatBotData.csv")
+df = df[:1000]
+
+question = apply_morphs(df["Q"].to_numpy())
+answer = apply_morphs(df["A"].to_numpy())
+lines = np.concatenate([question, answer])
+print(lines.shape)
+
+words = []
+for line in lines:
+    line = re.sub(pattern=pattern, repl="", string=line)
+    for word in line.split():
+        words.append(word)
+words = list(set([word for word in words if word]))
+words[:0] = [PAD, STA, END, UNK]
+
+vocab_size = len(words)
+cha2idx = dict([(word, idx) for idx, word in enumerate(words)])
+idx2cha = dict([(idx, word) for idx, word in enumerate(words)])
+
+x_train, x_test, y_train, y_test = train_test_split(
+    df["Q"].to_numpy(), df["A"].to_numpy(), test_size=0.2, random_state=42
+)
+print(x_train.shape)
+
 max_len = 25
 embed_dim = 128
 ffn_dim = 128
 num_heads = 8
 num_layers = 2
 
-epochs = 1
+epochs = 2
 batch_size = 256
 learning_rate = 0.001
 xavier_initializer = True
+
+train_input, train_input_len = encoder_preprocessing(apply_morphs(x_train), cha2idx)
+train_output, train_output_len = decoder_output_preprocessing(apply_morphs(y_train), cha2idx)
+train_target = decoder_target_preprocessing(apply_morphs(y_train), cha2idx)
+
+valid_input, valid_input_len = encoder_preprocessing(apply_morphs(x_test), cha2idx)
+valid_output, valid_output_len = decoder_output_preprocessing(apply_morphs(y_test), cha2idx)
+valid_target = decoder_target_preprocessing(apply_morphs(y_test), cha2idx)
+for line in valid_target[:10]:
+    text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
+    print("".join(text))
+
+
+def make_train_ds():
+    train_ds = tf.data.Dataset.from_tensor_slices((train_input, train_output, train_target))
+    train_ds = (
+        train_ds.shuffle(10000)
+        .batch(batch_size)
+        .map(lambda x, y, z: ({"inputs": x, "outputs": y}, z), num_parallel_calls=4)
+        .repeat()
+    )
+    return train_ds
+
+
+def make_valid_ds(inputs, outputs, targets, batch_size):
+    valid_ds = tf.data.Dataset.from_tensor_slices((valid_input, valid_output, valid_target))
+    valid_ds = (
+        valid_ds.shuffle(10000)
+        .batch(batch_size)
+        .map(lambda x, y, z: ({"inputs": x, "outputs": y}, z), num_parallel_calls=4)
+    )
+    return valid_ds
+
+
+def make_datasets(inputs, outputs, targets, batch_size):
+    datasets = tf.data.Dataset.from_tensor_slices((inputs, outputs, targets))
+    datasets = (
+        datasets.shuffle(10000)
+        .batch(batch_size)
+        .map(lambda x, y, z: ({"inputs": x, "outputs": y}, z), num_parallel_calls=4)
+    )
+    return datasets
+
+
+# embed_dim: word embedding size, encoder/decoder input/output size
+transformer = tf.estimator.Estimator(
+    model_fn=make_model,
+    model_dir="../data/transformer",
+    params={
+        "vocab_size": vocab_size,
+        "embed_dim": embed_dim,
+        "num_heads": num_heads,
+        "ffn_dim": ffn_dim,
+        "num_layers": num_layers,
+        "max_len": max_len,
+        "learning_rate": learning_rate,
+        "xavier_initializer": xavier_initializer,
+    },
+)
+
+transformer.train(
+    input_fn=lambda: make_datasets(train_input, train_output, train_target, batch_size),
+    steps=epochs,
+)
+results = transformer.evaluate(
+    input_fn=lambda: make_datasets(valid_input, valid_output, valid_target, batch_size)
+)
+print(results)
+
+
+def chatbot(sentence):
+    inputs, _ = encoder_preprocessing([sentence], cha2idx)
+    outputs, _ = decoder_output_preprocessing([""], cha2idx)
+    targets = decoder_target_preprocessing([""], cha2idx)
+
+    answer = ""
+    for i in range(max_len):
+        if i > 0:
+            outputs, _ = decoder_output_preprocessing([answer], cha2idx)
+            targets = decoder_target_preprocessing([answer], cha2idx)
+
+        predictions = transformer.predict(
+            input_fn=lambda: make_datasets(inputs, outputs, targets, batch_size)
+        )
+        answer, finished = index2string(predictions, idx2cha)
+        if finished:
+            break
+
+    return answer
+
+
+print(chatbot("안녕?"))
