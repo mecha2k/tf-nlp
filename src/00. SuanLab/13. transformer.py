@@ -89,7 +89,7 @@ def multi_head_attention(query, key, value, embed_dim, num_heads, mask=False):
 query = tf.random.normal(shape=(1, 1, 64), mean=0.0, stddev=1.0)
 key = tf.random.normal(shape=(1, 1, 64), mean=0.0, stddev=1.0)
 value = tf.random.normal(shape=(1, 1, 64), mean=0.0, stddev=1.0)
-outputs = multi_head_attention(query, key, value, embed_dim=128, num_heads=8)
+outputs = multi_head_attention(query, key, value, embed_dim=64, num_heads=8)
 print(outputs.shape)
 
 
@@ -274,7 +274,7 @@ def make_model(features, labels, mode, params):
 
 
 df = pd.read_csv("../data/ChatBotData.csv")
-df = df[:1000]
+print(df)
 
 question = apply_morphs(df["Q"].to_numpy())
 answer = apply_morphs(df["A"].to_numpy())
@@ -304,7 +304,7 @@ ffn_dim = 128
 num_heads = 8
 num_layers = 2
 
-epochs = 2
+epochs = 1
 batch_size = 256
 learning_rate = 0.001
 xavier_initializer = True
@@ -332,7 +332,7 @@ def make_train_ds():
     return train_ds
 
 
-def make_valid_ds(inputs, outputs, targets, batch_size):
+def make_valid_ds():
     valid_ds = tf.data.Dataset.from_tensor_slices((valid_input, valid_output, valid_target))
     valid_ds = (
         valid_ds.shuffle(10000)
@@ -368,13 +368,8 @@ transformer = tf.estimator.Estimator(
     },
 )
 
-transformer.train(
-    input_fn=lambda: make_datasets(train_input, train_output, train_target, batch_size),
-    steps=epochs,
-)
-results = transformer.evaluate(
-    input_fn=lambda: make_datasets(valid_input, valid_output, valid_target, batch_size)
-)
+transformer.train(input_fn=lambda: make_train_ds(), steps=epochs)
+results = transformer.evaluate(input_fn=lambda: make_valid_ds())
 print(results)
 
 
@@ -399,4 +394,4 @@ def chatbot(sentence):
     return answer
 
 
-print(chatbot("안녕?"))
+# print(chatbot("안녕?"))
