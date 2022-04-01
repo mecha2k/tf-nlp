@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import os, re
+import os
 
-from transformers import AutoTokenizer, TFAutoModel, BertTokenizer, TFBertModel, logging
+from transformers import AutoTokenizer, TFAutoModel, logging
 from tensorflow.keras import Input, Model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
