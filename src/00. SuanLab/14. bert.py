@@ -40,14 +40,29 @@ print(train_data.head())
 
 
 epochs = 3
-batch_size = 32
+batch_size = 64
 max_len = 40
 num_classes = 2
 
-tokenizer = AutoTokenizer.from_pretrained(
-    "bert-base-multilingual-cased", cache_dir="../data/bert_multi", do_lower_case=False
-)
-model = TFAutoModel.from_pretrained("bert-base-multilingual-cased", cache_dir="../data/bert_multi")
+
+model_name = "klue/bert-base"
+cache_dir = "../data/klue-bert-base"
+weights_file = "../data/bert_nsmc_klue.h5"
+train_np_file = "../data/bert_klue_train.npy"
+test_np_file = "../data/bert_klue_test.npy"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir, do_lower_case=False)
+model = TFAutoModel.from_pretrained(model_name, cache_dir=cache_dir, from_pt=True)
+
+
+# model_name = "bert-base-multilingual-cased"
+# cache_dir = "../data/bert_multi"
+# weights_file = "../data/bert_base_multi.h5"
+# train_np_file = "../data/bert_base_train.npy"
+# test_np_file = "../data/bert_base_test.npy"
+
+# tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir, do_lower_case=False)
+# model = TFAutoModel.from_pretrained(model_name, cache_dir=cache_dir)
 
 
 def bert_tokenizer(sentence, max_len=max_len):
@@ -80,7 +95,7 @@ def prepare_nsmc_tokens(data, filename):
     np.save(filename, (input_ids, attention_masks, token_type_ids))
 
 
-filename = "../data/bert_nsmc_train.npy"
+filename = train_np_file
 if not os.path.exists(filename):
     prepare_nsmc_tokens(train_data, filename)
 input_ids, attention_masks, token_type_ids = np.load(filename)
@@ -149,7 +164,7 @@ classification_model.compile(optimizer=optimizer, loss=loss, metrics=[metric])
 callbacks = [
     EarlyStopping(monitor="val_accuracy", min_delta=0.0001, patience=2),
     ModelCheckpoint(
-        "../data/bert_nsmc_hug.h5",
+        weights_file,
         monitor="val_accuracy",
         verbose=1,
         save_best_only=True,
@@ -157,28 +172,28 @@ callbacks = [
     ),
 ]
 
-# history = classification_model.fit(
-#     x=train_inputs,
-#     y=train_labels,
-#     epochs=epochs,
-#     batch_size=batch_size,
-#     validation_split=0.2,
-#     callbacks=callbacks,
-# )
+history = classification_model.fit(
+    x=train_inputs,
+    y=train_labels,
+    epochs=epochs,
+    batch_size=batch_size,
+    validation_split=0.2,
+    callbacks=callbacks,
+)
 
-# names = ["loss", "accuracy"]
-# plt.figure(figsize=(10, 5))
-# for i, name in enumerate(names):
-#     plt.subplot(1, 2, i + 1)
-#     plt.plot(history.history[name])
-#     plt.plot(history.history[f"val_{name}"])
-#     plt.xlabel("Epochs")
-#     plt.ylabel(name)
-#     plt.legend([name, f"val_{name}"])
-# plt.savefig("images/14-bert_nsmc_loss", dpi=300)
+names = ["loss", "accuracy"]
+plt.figure(figsize=(10, 5))
+for i, name in enumerate(names):
+    plt.subplot(1, 2, i + 1)
+    plt.plot(history.history[name])
+    plt.plot(history.history[f"val_{name}"])
+    plt.xlabel("Epochs")
+    plt.ylabel(name)
+    plt.legend([name, f"val_{name}"])
+plt.savefig("images/14-bert_nsmc_loss", dpi=300)
 
 
-filename = "../data/bert_nsmc_test.npy"
+filename = test_np_file
 if not os.path.exists(filename):
     prepare_nsmc_tokens(test_data, filename)
 input_ids, attention_masks, token_type_ids = np.load(filename)
@@ -187,7 +202,7 @@ test_inputs = (input_ids, attention_masks, token_type_ids)
 test_labels = test_data["label"].to_numpy()
 print(f"Test Sentences: {len(input_ids)}\tLabels: {len(test_labels)}")
 
-classification_model.load_weights("../data/bert_nsmc_hug.h5")
+classification_model.load_weights(weights_file)
 
 results = classification_model.evaluate(x=test_inputs, y=test_labels, batch_size=1024)
 print("test loss, test acc: ", results)
