@@ -157,7 +157,7 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
 
     def __call__(self, step):
         arg1 = tf.math.rsqrt(step)
-        arg2 = step * (self.warmup_steps**-1.5)
+        arg2 = step * (self.warmup_steps ** -1.5)
         return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
 
     # def get_config(self):
@@ -336,31 +336,35 @@ def transformer(vocab_size, num_layers, dff, d_model, num_heads, dropout, name="
     )(inputs)
 
     # 인코더의 출력은 enc_outputs. 디코더로 전달된다.
-    enc_outputs = encoder(
+    encoder_model = encoder(
         vocab_size=vocab_size,
         num_layers=num_layers,
         dff=dff,
         d_model=d_model,
         num_heads=num_heads,
         dropout=dropout,
-    )(
-        inputs=[inputs, enc_padding_mask]
-    )  # 인코더의 입력은 입력 문장과 패딩 마스크
+    )
+    enc_outputs = encoder_model(inputs=[inputs, enc_padding_mask])  # 인코더의 입력은 입력 문장과 패딩 마스크
+    plot_model(model=encoder_model, to_file="images/encoder.png", show_shapes=True)
 
     # 디코더의 출력은 dec_outputs. 출력층으로 전달된다.
-    dec_outputs = decoder(
+    decoder_model = decoder(
         vocab_size=vocab_size,
         num_layers=num_layers,
         dff=dff,
         d_model=d_model,
         num_heads=num_heads,
         dropout=dropout,
-    )(inputs=[dec_inputs, enc_outputs, look_ahead_mask, dec_padding_mask])
+    )
+    dec_outputs = decoder_model(inputs=[dec_inputs, enc_outputs, look_ahead_mask, dec_padding_mask])
+    plot_model(model=decoder_model, to_file="images/decoder.png", show_shapes=True)
 
     # 다음 단어 예측을 위한 출력층
     outputs = tf.keras.layers.Dense(units=vocab_size, name="outputs")(dec_outputs)
+    transformer_model = tf.keras.Model(inputs=[inputs, dec_inputs], outputs=outputs, name=name)
+    plot_model(model=transformer_model, to_file="images/transformer.png", show_shapes=True)
 
-    return tf.keras.Model(inputs=[inputs, dec_inputs], outputs=outputs, name=name)
+    return transformer_model
 
 
 def pos_encoding_attention_ex():
@@ -447,7 +451,7 @@ def transformer_chatbot():
 
     # 서브워드텍스트인코더를 사용하여 질문과 답변을 모두 포함한 단어 집합(Vocabulary) 생성
     tokenizer = tfds.deprecated.text.SubwordTextEncoder.build_from_corpus(
-        questions + answers, target_vocab_size=2**13
+        questions + answers, target_vocab_size=2 ** 13
     )
 
     # 시작 토큰과 종료 토큰에 대한 정수 부여.
