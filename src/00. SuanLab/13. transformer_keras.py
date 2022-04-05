@@ -27,14 +27,13 @@ ffn_dim = 128
 num_heads = 8
 num_layers = 2
 
-epochs = 1
+epochs = 1000
 batch_size = 256
 dropout = 0.2
 learning_rate = 0.001
 xavier_initializer = True
 
 
-from sklearn.model_selection import train_test_split
 from konlpy.tag import Okt
 import re
 
@@ -148,7 +147,7 @@ def scaled_dot_product_attention(query, key, value, mask=False):
         diag_values = tf.ones_like(outputs[0, :, :])
         triangular = tf.linalg.LinearOperatorLowerTriangular(diag_values).to_dense()
         masks = tf.tile(tf.expand_dims(triangular, 0), multiples=[tf.shape(outputs)[0], 1, 1])
-        paddings = tf.ones_like(masks) * (-(2 ** 30))
+        paddings = tf.ones_like(masks) * (-(2**30))
         outputs = tf.where(tf.equal(masks, 0), paddings, outputs)
 
     attention_map = tf.nn.softmax(outputs)
@@ -287,10 +286,10 @@ model.compile(optimizer=optimizer, loss="sparse_categorical_crossentropy", metri
 plot_model(model=model, to_file="images/13-transformer.png", show_shapes=True)
 
 callbacks = [
-    EarlyStopping(monitor="val_accuracy", min_delta=0.0001, patience=2),
+    EarlyStopping(monitor="val_loss", min_delta=0.00001, patience=10),
     ModelCheckpoint(
         "../data/transformer_ex.keras",
-        monitor="val_accuracy",
+        monitor="val_loss",
         verbose=1,
         save_best_only=True,
         save_weights_only=True,
@@ -298,32 +297,33 @@ callbacks = [
 ]
 
 
-# history = model.fit(
-#     train_ds,
-#     batch_size=batch_size,
-#     epochs=epochs,
-#     validation_data=valid_ds,
-#     verbose=1,
-#     callbacks=callbacks,
-# )
-
 history = model.fit(
-    x={"encoder": train_input, "decoder": train_output},
-    y=train_target,
+    train_ds,
     batch_size=batch_size,
     epochs=epochs,
+    validation_data=valid_ds,
     verbose=1,
     callbacks=callbacks,
-    validation_split=0.2,
 )
+
+# history = model.fit(
+#     x={"encoder": train_input, "decoder": train_output},
+#     y=train_target,
+#     batch_size=batch_size,
+#     epochs=epochs,
+#     verbose=1,
+#     callbacks=callbacks,
+#     validation_split=0.2,
+# )
+
 results = model.evaluate(
     x={"encoder": valid_input, "decoder": valid_output},
     y=valid_target,
     batch_size=batch_size,
     verbose=1,
 )
-# model.save_weights("../data/transformer_weight.h5")
-# print(results)
+model.save_weights("../data/transformer_weight.h5")
+print(results)
 
 
 names = ["loss", "accuracy"]

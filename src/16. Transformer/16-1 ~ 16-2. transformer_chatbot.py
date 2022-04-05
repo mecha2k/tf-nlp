@@ -157,7 +157,7 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
 
     def __call__(self, step):
         arg1 = tf.math.rsqrt(step)
-        arg2 = step * (self.warmup_steps ** -1.5)
+        arg2 = step * (self.warmup_steps**-1.5)
         return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
 
     # def get_config(self):
@@ -451,7 +451,7 @@ def transformer_chatbot():
 
     # 서브워드텍스트인코더를 사용하여 질문과 답변을 모두 포함한 단어 집합(Vocabulary) 생성
     tokenizer = tfds.deprecated.text.SubwordTextEncoder.build_from_corpus(
-        questions + answers, target_vocab_size=2 ** 13
+        questions + answers, target_vocab_size=2**13
     )
 
     # 시작 토큰과 종료 토큰에 대한 정수 부여.
