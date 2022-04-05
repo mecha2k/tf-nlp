@@ -349,9 +349,12 @@ def chatbot(sentence):
         if finished:
             break
 
-    return answer
+    print("=" * 100)
+    print("Question: ", sentence)
+    print("Answer: ", answer)
 
 
 model.load_weights("../data/transformer_weight.h5")
-print(chatbot("안녕?"))
-print(chatbot("놀고 싶다."))
+
+chatbot("안녕?")
+chatbot("놀고 싶다.")
