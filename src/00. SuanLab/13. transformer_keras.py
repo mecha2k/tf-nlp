@@ -326,6 +326,18 @@ results = model.evaluate(
 # print(results)
 
 
+names = ["loss", "accuracy"]
+plt.figure(figsize=(10, 5))
+for i, name in enumerate(names):
+    plt.subplot(1, 2, i + 1)
+    plt.plot(history.history[name])
+    plt.plot(history.history[f"val_{name}"])
+    plt.xlabel("Epochs")
+    plt.ylabel(name)
+    plt.legend([name, f"val_{name}"])
+plt.savefig("images/13-transformer_keras", dpi=300)
+
+
 def index2string(lines, dictionary):
     sentence = []
     finished = False
