@@ -304,6 +304,7 @@ callbacks = [
     ),
 ]
 
+
 # history = model.fit(
 #     x=[train_input, train_output],
 #     y=train_target,
