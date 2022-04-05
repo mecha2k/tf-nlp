@@ -155,6 +155,7 @@ plot_model(classification_model, to_file="images/14-cls_bert.png", show_shapes=T
 #
 # classification_model = TFBertClassification(num_class=num_classes)
 
+
 optimizer = tf.keras.optimizers.Adam(5e-5)
 loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 metric = tf.keras.metrics.SparseCategoricalAccuracy("accuracy")
