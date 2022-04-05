@@ -41,8 +41,6 @@ import re
 okt = Okt()
 
 (PAD, STA, END, UNK) = ("<PAD>", "<STA>", "<END>", "<UNK>")
-(PAD_IDX, STA_IDX, END_IDX, UNK_IDX) = (0, 1, 2, 3)
-
 pattern = re.compile(pattern="([~.,!?\"':;()])")
 
 
@@ -107,25 +105,20 @@ for line in valid_target[:5]:
     text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
     print("".join(text))
 print(train_input.shape)
-print(train_output.shape)
-print(train_target.shape)
 print(valid_input.shape)
-print(valid_output.shape)
-print(valid_target.shape)
 
 train_ds = tf.data.Dataset.from_tensor_slices((train_input, train_output, train_target))
 train_ds = (
     train_ds.shuffle(10000)
     .batch(batch_size)
-    .map(lambda x, y, z: ({"inputs": x, "outputs": y}, z), num_parallel_calls=4)
-    .repeat()
+    .map(lambda x, y, z: ({"encoder": x, "decoder": y}, z), num_parallel_calls=4)
 )
 
 valid_ds = tf.data.Dataset.from_tensor_slices((valid_input, valid_output, valid_target))
 valid_ds = (
     valid_ds.shuffle(10000)
     .batch(batch_size)
-    .map(lambda x, y, z: ({"inputs": x, "outputs": y}, z), num_parallel_calls=4)
+    .map(lambda x, y, z: ({"encoder": x, "decoder": y}, z), num_parallel_calls=4)
 )
 
 
@@ -285,7 +278,7 @@ def transformers(vocab_size, embed_dim, num_heads, ffn_dim, num_layers):
     dec_outputs = decoder_model(inputs=[decoder_inputs, enc_outputs])
     outputs = Dense(units=vocab_size)(dec_outputs)
 
-    return Model(inputs=[encoder_inputs, decoder_inputs], outputs=outputs)
+    return Model(inputs={"encoder": encoder_inputs, "decoder": decoder_inputs}, outputs=outputs)
 
 
 model = transformers(vocab_size, embed_dim, num_heads, ffn_dim, num_layers)
@@ -306,17 +299,29 @@ callbacks = [
 
 
 # history = model.fit(
-#     x=[train_input, train_output],
-#     y=train_target,
+#     train_ds,
 #     batch_size=batch_size,
 #     epochs=epochs,
+#     validation_data=valid_ds,
 #     verbose=1,
 #     callbacks=callbacks,
-#     validation_split=0.2,
 # )
-# results = model.evaluate(
-#     x=[valid_input, valid_output], y=valid_target, batch_size=batch_size, verbose=1
-# )
+
+history = model.fit(
+    x={"encoder": train_input, "decoder": train_output},
+    y=train_target,
+    batch_size=batch_size,
+    epochs=epochs,
+    verbose=1,
+    callbacks=callbacks,
+    validation_split=0.2,
+)
+results = model.evaluate(
+    x={"encoder": valid_input, "decoder": valid_output},
+    y=valid_target,
+    batch_size=batch_size,
+    verbose=1,
+)
 # model.save_weights("../data/transformer_weight.h5")
 # print(results)
 
