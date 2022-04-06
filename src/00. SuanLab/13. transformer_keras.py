@@ -23,11 +23,11 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 max_len = 25
 embed_dim = 128
-ffn_dim = 128
+ffn_dim = 512
 num_heads = 8
-num_layers = 2
+num_layers = 4
 
-epochs = 1000
+epochs = 1
 batch_size = 256
 dropout = 0.2
 learning_rate = 0.001
@@ -147,7 +147,7 @@ def scaled_dot_product_attention(query, key, value, mask=False):
         diag_values = tf.ones_like(outputs[0, :, :])
         triangular = tf.linalg.LinearOperatorLowerTriangular(diag_values).to_dense()
         masks = tf.tile(tf.expand_dims(triangular, 0), multiples=[tf.shape(outputs)[0], 1, 1])
-        paddings = tf.ones_like(masks) * (-(2**30))
+        paddings = tf.ones_like(masks) * (-(2 ** 30))
         outputs = tf.where(tf.equal(masks, 0), paddings, outputs)
 
     attention_map = tf.nn.softmax(outputs)
@@ -286,10 +286,10 @@ model.compile(optimizer=optimizer, loss="sparse_categorical_crossentropy", metri
 plot_model(model=model, to_file="images/13-transformer.png", show_shapes=True)
 
 callbacks = [
-    EarlyStopping(monitor="val_loss", min_delta=0.00001, patience=10),
+    EarlyStopping(monitor="val_accuracy", min_delta=0.001, patience=2),
     ModelCheckpoint(
         "../data/transformer_ex.keras",
-        monitor="val_loss",
+        monitor="val_accuracy",
         verbose=1,
         save_best_only=True,
         save_weights_only=True,
@@ -313,7 +313,7 @@ history = model.fit(
 #     epochs=epochs,
 #     verbose=1,
 #     callbacks=callbacks,
-#     validation_split=0.2,
+#     validation_data=[{"encoder": valid_input, "decoder": valid_output}, valid_target],
 # )
 
 results = model.evaluate(
