@@ -36,7 +36,7 @@ ffn_dim = 512
 num_heads = 8
 num_layers = 4
 
-epochs = 1
+epochs = 100
 batch_size = 256
 dropout = 0.2
 learning_rate = 0.001
@@ -274,14 +274,15 @@ decoder_outputs = Dense(vocab_size, activation="softmax")(x)
 transformer = Model(
     inputs={"encoder": encoder_inputs, "decoder": decoder_inputs}, outputs=decoder_outputs
 )
+optimizer = Adam(learning_rate=learning_rate)
 transformer.compile(
-    optimizer="rmsprop", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
 plot_model(transformer, "images/seq2seq_transformer.png", show_shapes=True)
 transformer.summary()
 
 callbacks = [
-    EarlyStopping(monitor="val_accuracy", min_delta=0.001, patience=2),
+    EarlyStopping(monitor="val_accuracy", min_delta=0.0001, patience=5),
     ModelCheckpoint("../data/seq2seq_transformer.keras", save_best_only=True),
 ]
 history = transformer.fit(
@@ -305,8 +306,7 @@ plt.savefig("images/13-transformer_keras", dpi=300)
 def index2string(lines, dictionary):
     sentence = []
     finished = False
-    for line in lines:
-        sentence = [dictionary[idx] for idx in line]
+    sentence = [dictionary[idx] for idx in lines]
     answer = ""
     for word in sentence:
         if word == END:
@@ -326,9 +326,8 @@ def chatbot(sentence):
         if i > 0:
             outputs, _ = decoder_output_preprocessing([answer], cha2idx)
         predictions = transformer([inputs, outputs])
-        predictions = tf.argmax(predictions[0, i, :]).numpy()
-        predictions = tf.argmax(predictions, axis=2).numpy()
-        print(predictions)
+        predictions = [tf.argmax(predictions[0, i, :]).numpy()]
+        # predictions = tf.argmax(predictions, axis=2).numpy()
         answer, finished = index2string(predictions, idx2cha)
         if finished:
             break

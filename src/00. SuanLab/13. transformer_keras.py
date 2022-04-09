@@ -147,7 +147,7 @@ def scaled_dot_product_attention(query, key, value, mask=False):
         diag_values = tf.ones_like(outputs[0, :, :])
         triangular = tf.linalg.LinearOperatorLowerTriangular(diag_values).to_dense()
         masks = tf.tile(tf.expand_dims(triangular, 0), multiples=[tf.shape(outputs)[0], 1, 1])
-        paddings = tf.ones_like(masks) * (-(2 ** 30))
+        paddings = tf.ones_like(masks) * (-(2**30))
         outputs = tf.where(tf.equal(masks, 0), paddings, outputs)
 
     attention_map = tf.nn.softmax(outputs)
