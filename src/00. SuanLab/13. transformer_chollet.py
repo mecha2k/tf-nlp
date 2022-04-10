@@ -316,7 +316,7 @@ optimizer = Adam(learning_rate=learning_rate)
 transformer.compile(
     optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
-plot_model(transformer, "images/seq2seq_transformer.png", show_shapes=True)
+plot_model(transformer, "images/13-seq2seq_transformer.png", show_shapes=True)
 transformer.summary()
 
 callbacks = [
