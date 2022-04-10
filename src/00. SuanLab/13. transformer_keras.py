@@ -92,19 +92,19 @@ def decoder_target_preprocessing(lines, dictionary):
     return np.array(sentences)
 
 
-cha2idx, idx2cha = np.load(file="../data/tf_dict.npy", allow_pickle=True)
-train_input, train_output, train_target = np.load(file="../data/tf_train.npy", allow_pickle=True)
-valid_input, valid_output, valid_target = np.load(file="../data/tf_valid.npy", allow_pickle=True)
-vocab_size = len(cha2idx)
-print(vocab_size)
-for line in valid_output[:5]:
-    text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
-    print("".join(text))
-for line in valid_target[:5]:
-    text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
-    print("".join(text))
-print(train_input.shape)
-print(valid_input.shape)
+# cha2idx, idx2cha = np.load(file="../data/tf_dict.npy", allow_pickle=True)
+# train_input, train_output, train_target = np.load(file="../data/tf_train.npy", allow_pickle=True)
+# valid_input, valid_output, valid_target = np.load(file="../data/tf_valid.npy", allow_pickle=True)
+# vocab_size = len(cha2idx)
+# print(vocab_size)
+# for line in valid_output[:5]:
+#     text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
+#     print("".join(text))
+# for line in valid_target[:5]:
+#     text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
+#     print("".join(text))
+# print(train_input.shape)
+# print(valid_input.shape)
 
 train_ds = tf.data.Dataset.from_tensor_slices((train_input, train_output, train_target))
 train_ds = (

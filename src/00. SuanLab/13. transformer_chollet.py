@@ -18,7 +18,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.utils import plot_model
-
+from sklearn.model_selection import train_test_split
 
 np.random.seed(42)
 np.set_printoptions(precision=3, suppress=True)
@@ -101,19 +101,57 @@ def decoder_target_preprocessing(lines, dictionary):
     return np.array(sentences)
 
 
-cha2idx, idx2cha = np.load(file="../data/tf_dict.npy", allow_pickle=True)
-train_input, train_output, train_target = np.load(file="../data/tf_train.npy", allow_pickle=True)
-valid_input, valid_output, valid_target = np.load(file="../data/tf_valid.npy", allow_pickle=True)
-vocab_size = len(cha2idx)
-print(vocab_size)
-for line in valid_output[:5]:
-    text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
-    print("".join(text))
-for line in valid_target[:5]:
-    text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
-    print("".join(text))
+df = pd.read_csv("../data/ChatBotData.csv")
+print(df)
+
+question = apply_morphs(df["Q"].to_numpy())
+answer = apply_morphs(df["A"].to_numpy())
+lines = np.concatenate([question, answer])
+print(lines.shape)
+
+words = []
+for line in lines:
+    line = re.sub(pattern=pattern, repl="", string=line)
+    for word in line.split():
+        words.append(word)
+words = list(set([word for word in words if word]))
+words[:0] = [PAD, STA, END, UNK]
+
+vocab_size = len(words)
+cha2idx = dict([(word, idx) for idx, word in enumerate(words)])
+idx2cha = dict([(idx, word) for idx, word in enumerate(words)])
+
+x_train, x_test, y_train, y_test = train_test_split(
+    df["Q"].to_numpy(), df["A"].to_numpy(), test_size=0.2, random_state=42
+)
+print(x_train.shape)
+
+
+train_input, train_input_len = encoder_preprocessing(apply_morphs(x_train), cha2idx)
+train_output, train_output_len = decoder_output_preprocessing(apply_morphs(y_train), cha2idx)
+train_target = decoder_target_preprocessing(apply_morphs(y_train), cha2idx)
 print(train_input.shape)
+
+valid_input, valid_input_len = encoder_preprocessing(apply_morphs(x_test), cha2idx)
+valid_output, valid_output_len = decoder_output_preprocessing(apply_morphs(y_test), cha2idx)
+valid_target = decoder_target_preprocessing(apply_morphs(y_test), cha2idx)
 print(valid_input.shape)
+
+
+# cha2idx, idx2cha = np.load(file="../data/tf_dict.npy", allow_pickle=True)
+# train_input, train_output, train_target = np.load(file="../data/tf_train.npy", allow_pickle=True)
+# valid_input, valid_output, valid_target = np.load(file="../data/tf_valid.npy", allow_pickle=True)
+# vocab_size = len(cha2idx)
+# print(vocab_size)
+# for line in valid_output[:5]:
+#     text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
+#     print("".join(text))
+# for line in valid_target[:5]:
+#     text = [idx2cha[x] + " " for x in line if idx2cha[x] != PAD]
+#     print("".join(text))
+# print(train_input.shape)
+# print(valid_input.shape)
+
 
 train_ds = tf.data.Dataset.from_tensor_slices((train_input, train_output, train_target))
 train_ds = (
