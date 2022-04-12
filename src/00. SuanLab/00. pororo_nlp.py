@@ -16,7 +16,7 @@ sentence = "Kevin is still working."
 print(mt(sentence, src="en", tgt="ko"))
 
 sentence = """
-Yandex.Translate is a mobile and web service that translates words, phrases, whole texts, and entire
+Yandex.Translate is a mobile and web service that translates words, phrases, whole texts, and entire
 websites from English into Korean. The meanings of individual words come complete with examples of 
 usage, transcription, and the possibility to hear pronunciation. In site translation mode, 
 Yandex.Translate will translate the entire text content of the site at the URL you provide. 
