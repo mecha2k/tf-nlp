@@ -1,4 +1,3 @@
-from unittest.mock import sentinel
 from pororo import Pororo
 import warnings
 
