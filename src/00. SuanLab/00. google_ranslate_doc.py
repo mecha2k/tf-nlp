@@ -1,10 +1,10 @@
-from pororo import Pororo
 import docx
 import warnings
+from googletrans import Translator
 
 warnings.filterwarnings("ignore")
-mt = Pororo(task="translation", lang="multi")
 
+translator = Translator()
 doc = docx.Document("../data/Preface.docx")
 print(len(doc.paragraphs))
 
@@ -14,5 +14,6 @@ for idx, paras in enumerate(doc.paragraphs):
         continue
     print(idx)
     print(sentence)
-    print(mt(sentence, src="en", tgt="ko"))
+    result = translator.translate(sentence, src="en", dest="ko")
+    print(result.text)
     print("-" * 30)
