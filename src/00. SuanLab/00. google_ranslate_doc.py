@@ -1,19 +1,27 @@
 import docx
+import os
 import warnings
 from googletrans import Translator
 
 warnings.filterwarnings("ignore")
 
 translator = Translator()
-doc = docx.Document("../data/Preface.docx")
-print(len(doc.paragraphs))
+en_path = "../data/Finding Alphas.docx"
+base = os.path.splitext(en_path)
+ko_path = base[0] + "_ko" + base[1]
 
-for idx, paras in enumerate(doc.paragraphs):
+en_doc = docx.Document(en_path)
+ko_doc = docx.Document()
+print(len(en_doc.paragraphs))
+
+for idx, paras in enumerate(en_doc.paragraphs):
     sentence = (paras.text).strip()
+    if idx == 200:
+        break
     if not sentence:
         continue
-    print(idx)
-    print(sentence)
     result = translator.translate(sentence, src="en", dest="ko")
+    para = ko_doc.add_paragraph(result.text)
     print(result.text)
-    print("-" * 30)
+
+ko_doc.save(ko_path)

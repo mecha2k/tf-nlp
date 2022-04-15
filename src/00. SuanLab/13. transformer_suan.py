@@ -376,24 +376,24 @@ def make_datasets(inputs, outputs, targets, batch_size):
 
 
 # embed_dim: word embedding size, encoder/decoder input/output size
-# transformer = tf.estimator.Estimator(
-#     model_fn=make_model,
-#     model_dir="../data/transformer",
-#     params={
-#         "vocab_size": vocab_size,
-#         "embed_dim": embed_dim,
-#         "num_heads": num_heads,
-#         "ffn_dim": ffn_dim,
-#         "num_layers": num_layers,
-#         "max_len": max_len,
-#         "learning_rate": learning_rate,
-#         "xavier_initializer": xavier_initializer,
-#     },
-# )
-#
-# transformer.train(input_fn=lambda: make_train_ds(), steps=epochs)
-# results = transformer.evaluate(input_fn=lambda: make_valid_ds())
-# print(results)
+transformer = tf.estimator.Estimator(
+    model_fn=make_model,
+    model_dir="../data/transformer",
+    params={
+        "vocab_size": vocab_size,
+        "embed_dim": embed_dim,
+        "num_heads": num_heads,
+        "ffn_dim": ffn_dim,
+        "num_layers": num_layers,
+        "max_len": max_len,
+        "learning_rate": learning_rate,
+        "xavier_initializer": xavier_initializer,
+    },
+)
+
+transformer.train(input_fn=lambda: make_train_ds(), steps=epochs)
+results = transformer.evaluate(input_fn=lambda: make_valid_ds())
+print(results)
 
 
 def chatbot(sentence):
