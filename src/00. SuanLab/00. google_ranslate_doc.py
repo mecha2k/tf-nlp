@@ -3,6 +3,7 @@ import os
 import warnings
 from googletrans import Translator
 
+
 warnings.filterwarnings("ignore")
 
 translator = Translator()
@@ -14,9 +15,10 @@ en_doc = docx.Document(en_path)
 ko_doc = docx.Document()
 print(len(en_doc.paragraphs))
 
+
 for idx, paras in enumerate(en_doc.paragraphs):
-    sentence = (paras.text).strip()
-    if idx == 10:
+    sentence = paras.text.strip()
+    if idx == 1000:
         break
     if not sentence:
         continue

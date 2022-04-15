@@ -1,18 +1,28 @@
-from pororo import Pororo
+from dooly import Dooly
 import docx
 import warnings
+import os
 
 warnings.filterwarnings("ignore")
-mt = Pororo(task="translation", lang="multi")
+mt = Dooly(task="translation", lang="multi")
 
-doc = docx.Document("../data/Preface.docx")
-print(len(doc.paragraphs))
+en_path = "../data/Finding Alphas.docx"
+base = os.path.splitext(en_path)
+ko_path = base[0] + "_ko" + base[1]
 
-for idx, paras in enumerate(doc.paragraphs):
-    sentence = (paras.text).strip()
+en_doc = docx.Document(en_path)
+ko_doc = docx.Document()
+print(len(en_doc.paragraphs))
+
+
+for idx, paras in enumerate(en_doc.paragraphs):
+    sentence = paras.text.strip()
+    if idx == 1000:
+        break
     if not sentence:
         continue
-    print(idx)
-    print(sentence)
-    print(mt(sentence, src="en", tgt="ko"))
-    print("-" * 30)
+    result = mt(sentence, src_langs="en", tgt_langs="ko")
+    para = ko_doc.add_paragraph(result)
+    print(result)
+
+ko_doc.save(ko_path)
