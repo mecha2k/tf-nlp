@@ -16,7 +16,7 @@ print(len(en_doc.paragraphs))
 
 for idx, paras in enumerate(en_doc.paragraphs):
     sentence = (paras.text).strip()
-    if idx == 200:
+    if idx == 20:
         break
     if not sentence:
         continue
