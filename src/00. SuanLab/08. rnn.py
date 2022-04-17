@@ -10,7 +10,6 @@ import os
 from konlpy.tag import Mecab
 from collections import Counter
 from wordcloud import WordCloud
-import squarify
 
 
 np.random.seed(42)

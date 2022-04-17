@@ -13,12 +13,15 @@ from konlpy.tag import Kkma
 
 # KSS(Korean Sentence Splitter)
 import kss
+import os
 
 from tensorflow.keras.preprocessing.text import text_to_word_sequence
 from multiprocessing import freeze_support
 
 nltk.download("punkt", quiet=True)
 nltk.download("averaged_perceptron_tagger", quiet=True)
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 
 if __name__ == "__main__":
