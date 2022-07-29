@@ -47,7 +47,7 @@ tokenizer = KoBERTTokenizer.from_pretrained(
 class NsmcDataset(Dataset):
     def __init__(self, filename, tokenizer):
         self.df = pd.read_table(filename)
-        self.df = self.df[:32]
+        self.df = self.df[:128]
         self.df = self.df.drop_duplicates(subset=["document"])
         self.df = self.df.dropna(how="any")
         self.num_labels = self.df["label"].value_counts().shape[0]
@@ -136,8 +136,7 @@ def calc_accuracy(x, y):
 # print(loss)
 
 
-progress_bar = tqdm(range(training_steps))
-for epoch in range(epochs):
+for epoch in tqdm(range(epochs)):
     model.train()
     step, train_acc, test_acc = 0, 0, 0
     for step, inputs in enumerate(train_loader):
@@ -150,7 +149,6 @@ for epoch in range(epochs):
         optimizer.step()
         scheduler.step()
         train_acc += calc_accuracy(outputs, labels)
-        progress_bar.update(1)
         if step % 2 == 0:
             print(
                 f"epoch: {epoch}, step: {step}, loss: {loss.item()}, train_acc: {train_acc / (step + 1)}"
