@@ -2,18 +2,23 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import datasets
+import os
 from torch.optim import AdamW
 from torch.utils.data import Dataset, DataLoader
 from tqdm.auto import tqdm
 
-from transformers import BertModel
+from transformers import BertModel, get_scheduler
 from transformers.utils import logging
 from transformers.optimization import get_cosine_schedule_with_warmup
 from kobert_tokenizer import KoBERTTokenizer
+from datasets import load_metric
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 
 logging.set_verbosity_error()
+print(datasets.list_metrics())
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"{device} is available in torch")
 
@@ -23,7 +28,7 @@ batch_size = 32
 learning_rate = 1e-5
 warmup_ratio = 0.1
 max_seq_len = 64
-
+model_file = "../data/models/kobert_skt_02.pt"
 
 model = BertModel.from_pretrained("skt/kobert-base-v1")
 tokenizer = KoBERTTokenizer.from_pretrained(
@@ -46,8 +51,7 @@ tokenizer = KoBERTTokenizer.from_pretrained(
 
 class NsmcDataset(Dataset):
     def __init__(self, filename, tokenizer):
-        self.df = pd.read_table(filename)
-        self.df = self.df[:128]
+        self.df = pd.read_table(filename, encoding="utf-8")
         self.df = self.df.drop_duplicates(subset=["document"])
         self.df = self.df.dropna(how="any")
         self.num_labels = self.df["label"].value_counts().shape[0]
@@ -76,7 +80,7 @@ test_dataset = NsmcDataset("../data/ratings_test.txt", tokenizer)
 print(train_dataset[0]["input_ids"].shape)
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
 inputs = next(iter(train_loader))
 labels = inputs.pop("labels")
@@ -88,10 +92,10 @@ print(tokenizer.decode(inputs["input_ids"][0]))
 print(labels.shape)
 
 model.to(device)
-traing_steps = epochs * len(train_loader)
+training_steps = epochs * len(train_loader)
 optimizer = AdamW(model.parameters(), lr=learning_rate)
-scheduler = get_cosine_schedule_with_warmup(
-    optimizer, num_warmup_steps=int(traing_steps * warmup_ratio), num_training_steps=traing_steps
+lr_scheduler = get_scheduler(
+    name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=training_steps
 )
 
 
@@ -109,7 +113,13 @@ class BertModel(nn.Module):
         return self.fc(output)
 
 
-bert_model = BertModel(model, num_labels=train_dataset.num_labels).to(device)
+if os.path.exists(model_file):
+    bert_model = torch.load(model_file).to(device)
+    print("Model loaded")
+else:
+    bert_model = BertModel(model, num_labels=train_dataset.num_labels).to(device)
+    print("Model created")
+
 optimizer = AdamW(bert_model.parameters(), lr=learning_rate)
 loss_fn = nn.CrossEntropyLoss()
 
@@ -121,10 +131,12 @@ scheduler = get_cosine_schedule_with_warmup(
 )
 
 
-def calc_accuracy(x, y):
-    max_vals, max_indices = torch.max(x, 1)
-    train_acc = (max_indices == y).sum().data.cpu().numpy() / max_indices.size()[0]
-    return train_acc
+def compute_metrics(preds, labels):
+    preds = torch.argmax(preds, dim=-1).cpu().numpy()
+    labels = labels.cpu().numpy()
+    precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average="binary")
+    acc = accuracy_score(labels, preds)
+    return {"accuracy": acc, "f1": f1, "precision": precision, "recall": recall}
 
 
 # _, output = model(**inputs, return_dict=False)
@@ -138,7 +150,7 @@ def calc_accuracy(x, y):
 
 for epoch in tqdm(range(epochs)):
     model.train()
-    step, train_acc, test_acc = 0, 0, 0
+    train_acc = 0
     for step, inputs in enumerate(train_loader):
         inputs = {k: v.to(device) for k, v in inputs.items()}
         labels = inputs.pop("labels")
@@ -148,17 +160,45 @@ for epoch in tqdm(range(epochs)):
         loss.backward()
         optimizer.step()
         scheduler.step()
-        train_acc += calc_accuracy(outputs, labels)
-        if step % 2 == 0:
+        metric = compute_metrics(outputs, labels)
+        train_acc += metric["accuracy"]
+        if step % 100 == 0:
             print(
-                f"epoch: {epoch}, step: {step}, loss: {loss.item()}, train_acc: {train_acc / (step + 1)}"
+                f"epoch: {epoch:3d}, step: {step:5d}, loss: {loss.item():10.5f}, train_acc: {train_acc / (step + 1):10.5f}"
             )
-    print(f"epoch: {epoch}, train_acc: {train_acc / (step + 1) * 100:.2f}%")
 
     model.eval()
+    metric = load_metric("accuracy")
+    print(metric.inputs_description)
     for step, inputs in enumerate(test_loader):
         inputs = {k: v.to(device) for k, v in inputs.items()}
         labels = inputs.pop("labels")
         outputs = bert_model(**inputs)
-        test_acc += calc_accuracy(outputs, labels)
-    print(f"epoch: {epoch}, test_acc: {test_acc / (step + 1) * 100:.2f}%")
+        predictions = torch.argmax(outputs, dim=-1)
+        metric.add_batch(predictions=predictions, references=labels)
+    score = metric.compute()
+    print(f"epoch: {epoch:3d}, test_acc: {score['accuracy']*100:6.2f}%")
+
+torch.save(bert_model, model_file)
+
+
+def predict(sentence):
+    tokens = tokenizer(sentence, max_length=max_seq_len, padding="max_length", truncation=True)
+    with torch.no_grad():
+        tokens = {k: torch.tensor(v).unsqueeze(dim=0).to(device) for k, v in tokens.items()}
+        outputs = bert_model(**tokens)
+        predictions = torch.argmax(outputs, dim=-1)
+        return predictions.cpu().numpy()
+
+
+bert_model = torch.load(model_file).to(device)
+bert_model.eval()
+
+sentiment_dict = {0: "부정", 1: "긍정"}
+samples = DataLoader(train_dataset, batch_size=10, shuffle=True)
+samples = next(iter(samples))["input_ids"]
+print(samples.shape)
+for sample in samples:
+    sentence = tokenizer.decode(sample, skip_special_tokens=True)
+    print(sentence, ",  판정 : ", sentiment_dict[predict(sentence)[0]])
+    print("-" * 120)
