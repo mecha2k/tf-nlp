@@ -305,7 +305,7 @@ def chatbot(text):
 model = torch.load(model_file).to(device)
 model.eval()
 
-print(chatbot("안녕하세요"))
+# print(chatbot("안녕하세요"))
 
 # sentiment_dict = {0: "부정", 1: "긍정"}
 # samples = DataLoader(train_dataset, batch_size=10, shuffle=True)
@@ -315,3 +315,34 @@ print(chatbot("안녕하세요"))
 #     sentence = tokenizer.decode(sample, skip_special_tokens=True)
 #     print(sentence, ",  판정 : ", sentiment_dict[predict(sentence)[0]])
 #     print("-" * 120)
+
+text = "오늘도 좋은 하루!"
+# question = "<usr>" + text + "<sys>"
+# input_ids = [tokenizer.bos_token_id] + tokenizer.encode(question)
+# input_ids = torch.tensor(input_ids, dtype=torch.long).to(device)
+#
+#
+# output = model.generate(
+#     input_ids, max_length=50, early_stopping=True, eos_token_id=tokenizer.eos_token_id
+# )
+#
+# decoded_sentence = tokenizer.decode(output[0].numpy().tolist())
+#
+# decoded_sentence.split("<sys> ")[1].replace("</s>", "")
+#
+# output = model.generate(input_ids, max_length=50, do_sample=True, top_k=10)
+# tokenizer.decode(output[0].numpy().tolist())
+
+# text = "근육이 커지기 위해서는"
+# input_ids = tokenizer.encode(text, return_tensors="pt").to(device)
+# gen_ids = model.generate(
+#     input_ids,
+#     max_length=128,
+#     repetition_penalty=2.0,
+#     pad_token_id=tokenizer.pad_token_id,
+#     eos_token_id=tokenizer.eos_token_id,
+#     bos_token_id=tokenizer.bos_token_id,
+#     use_cache=True,
+# )
+# generated = tokenizer.decode(gen_ids[0])
+# print(generated)
