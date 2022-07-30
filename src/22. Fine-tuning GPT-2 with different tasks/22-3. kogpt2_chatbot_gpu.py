@@ -11,7 +11,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 tokenizer = AutoTokenizer.from_pretrained(
     "skt/kogpt2-base-v2",
-    bos_token="<s>",
+    bos_token="</s>",
     eos_token="</s>",
     unk_token="<unk>",
     pad_token="<pad>",
@@ -23,10 +23,10 @@ print(tokenizer.bos_token_id)
 print(tokenizer.eos_token_id)
 print(tokenizer.pad_token_id)
 print("-" * 50)
+print(tokenizer.decode(0))
 print(tokenizer.decode(1))
 print(tokenizer.decode(2))
 print(tokenizer.decode(3))
-print(tokenizer.decode(4))
 
 batch_sentences = [
     "But what about second breakfast?",
@@ -52,8 +52,6 @@ print(tokenizer.all_special_ids)
 train_data = pd.read_csv("../data/ChatBotData.csv")
 print(train_data.head())
 print(len(train_data))
-
-batch_size = 32
 
 
 def get_chat_data():
