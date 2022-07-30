@@ -6,11 +6,6 @@ from transformers.utils import logging
 from kobert_tokenizer import KoBERTTokenizer
 
 
-logging.set_verbosity_error()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"{device} is available in torch")
-
-
 class BertModel(nn.Module):
     def __init__(self, model, num_labels):
         super(BertModel, self).__init__()
@@ -24,6 +19,9 @@ class BertModel(nn.Module):
         output = self.dropout(output)
         return self.fc(output)
 
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"{device} is available in torch")
 
 max_seq_len = 64
 model_file = "../data/models/kobert_skt_02.pt"
@@ -46,7 +44,7 @@ def predict(sentence):
 
 
 sentiment_dict = {0: "부정", 1: "긍정"}
-sentences = pd.read_table("../data/ratings_train.txt", encoding="utf-8")
+sentences = pd.read_table("../data/ratings_test.txt", encoding="utf-8")
 sentences = sentences.drop_duplicates(subset=["document"])
 sentences = sentences.dropna(how="any")
 sentences = sentences["document"].sample(n=10).tolist()
