@@ -23,7 +23,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"{device} is available in torch")
 
 
-epochs = 1
+epochs = 3
 batch_size = 32
 learning_rate = 1e-5
 warmup_ratio = 0.1
