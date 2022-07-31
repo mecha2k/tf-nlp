@@ -253,34 +253,6 @@ for epoch in tqdm(range(epochs)):
 
 torch.save(model, model_file)
 
-#             while 1:
-#                 input_ids = torch.LongTensor(tok.encode(U_TKN + q + SENT + sent + S_TKN + a)).unsqueeze(dim=0)
-#                 pred = self(input_ids)
-#                 gen = tok.convert_ids_to_tokens(
-#                     torch.argmax(
-#                         pred,
-#                         dim=-1).squeeze().numpy().tolist())[-1]
-#                 if gen == EOS:
-#                     break
-#                 a += gen.replace('▁', ' ')
-#             print("Simsimi > {}".format(a.strip()))
-
-# #
-# q_toked = self.tokenizer.tokenize(self.q_token + q + self.sent_token)
-# q_len = len(q_toked)
-#
-# a_toked = self.tokenizer.tokenize(self.a_token + a + self.eos)
-# a_len = len(a_toked)
-#     input_ids = torch.LongTensor(koGPT2_TOKENIZER.encode(Q_TKN + q + SENT + sent + A_TKN + a)).unsqueeze(dim=0)
-
-# usr_token = "<usr>"
-# sys_token = "<sys>"
-# bos_token = tokenizer.bos_token
-# eos_token = tokenizer.eos_token
-# mask_token = tokenizer.mask_token
-# qus_token = tokenizer.tokenize(bos_token + question + usr_token)
-# ans_token = tokenizer.tokenize(sys_token + answer + eos_token)
-
 
 def chatbot(text):
     question = tokenizer.tokenize(text)
@@ -307,42 +279,18 @@ model.eval()
 
 # print(chatbot("안녕하세요"))
 
-# sentiment_dict = {0: "부정", 1: "긍정"}
-# samples = DataLoader(train_dataset, batch_size=10, shuffle=True)
-# samples = next(iter(samples))["input_ids"]
-# print(samples.shape)
-# for sample in samples:
-#     sentence = tokenizer.decode(sample, skip_special_tokens=True)
-#     print(sentence, ",  판정 : ", sentiment_dict[predict(sentence)[0]])
-#     print("-" * 120)
 
-text = "오늘도 좋은 하루!"
+# text = "오늘도 좋은 하루!"
 # question = "<usr>" + text + "<sys>"
 # input_ids = [tokenizer.bos_token_id] + tokenizer.encode(question)
 # input_ids = torch.tensor(input_ids, dtype=torch.long).to(device)
-#
-#
-# output = model.generate(
-#     input_ids, max_length=50, early_stopping=True, eos_token_id=tokenizer.eos_token_id
-# )
-#
-# decoded_sentence = tokenizer.decode(output[0].numpy().tolist())
-#
-# decoded_sentence.split("<sys> ")[1].replace("</s>", "")
-#
-# output = model.generate(input_ids, max_length=50, do_sample=True, top_k=10)
-# tokenizer.decode(output[0].numpy().tolist())
 
-# text = "근육이 커지기 위해서는"
-# input_ids = tokenizer.encode(text, return_tensors="pt").to(device)
-# gen_ids = model.generate(
-#     input_ids,
-#     max_length=128,
-#     repetition_penalty=2.0,
-#     pad_token_id=tokenizer.pad_token_id,
-#     eos_token_id=tokenizer.eos_token_id,
-#     bos_token_id=tokenizer.bos_token_id,
-#     use_cache=True,
+# output = model.generate(
+#     input_ids, max_length=max_seq_len, early_stopping=True, eos_token_id=tokenizer.eos_token_id
 # )
-# generated = tokenizer.decode(gen_ids[0])
-# print(generated)
+# decoded_sentence = tokenizer.decode(output[0].numpy().tolist())
+# decoded_sentence.split("<sys> ")[1].replace("</s>", "")
+# print(decoded_sentence)
+
+# output = model.generate(input_ids, max_length=50, do_sample=True, top_k=10)
+# print(tokenizer.decode(output[0].numpy().tolist()))
