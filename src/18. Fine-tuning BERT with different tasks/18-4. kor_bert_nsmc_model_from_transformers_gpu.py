@@ -100,5 +100,5 @@ def load_bert_model():
 
 
 if __name__ == "__main__":
-    train_bert_model()
+    # train_bert_model()
     load_bert_model()
