@@ -3,12 +3,6 @@ from numpy import dot
 from numpy.linalg import norm
 from sentence_transformers import SentenceTransformer
 
-# pip install sentence_transformers
-
-# urllib.request.urlretrieve(
-#     "https://raw.githubusercontent.com/songys/Chatbot_data/master/ChatbotData.csv",
-#     filename="../data/ChatBotData.csv",
-# )
 
 train_data = pd.read_csv("../data/ChatBotData.csv")
 train_data.head()
@@ -35,7 +29,6 @@ print(return_similar_answer("반가워"))
 print(return_similar_answer("사랑해"))
 print(return_similar_answer("너는 누구니?"))
 print(return_similar_answer("영화"))
-print(return_similar_answer("너무 짜증나"))
 print(return_similar_answer("화가납니다"))
 print(return_similar_answer("나랑 놀자"))
 print(return_similar_answer("나랑 게임하자"))
