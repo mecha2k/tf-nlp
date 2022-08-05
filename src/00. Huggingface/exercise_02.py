@@ -53,3 +53,10 @@ ic(inputs.shape)
 ic(labels.shape)
 loss = loss_fn(inputs.transpose(1, 2), labels)
 ic(loss)
+
+loss1 = loss_fn(inputs[0], labels[0])
+ic(loss1)
+loss2 = loss_fn(inputs[1], labels[1])
+ic(loss2)
+loss = (loss1 + loss2) / 2
+ic(loss)
